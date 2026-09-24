@@ -5,11 +5,16 @@
 
     <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="28,24,28,16">
 
-        <StackPanel Spacing="2">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
             <TextBlock Classes="page-title" Text="预算" Margin="0" />
             <TextBlock Classes="secondary"
-                       Text="只读概览 —— 各资金通道当前余额与近月动账走势(本模块无写入路径)" />
+                       Text="各资金通道当前余额与近月收支柱势(只读)" />
         </StackPanel>
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
 
         <!-- 通道余额 -->
         <Grid Grid.Row="1" ColumnDefinitions="*,10,*,10,*" Margin="0,14,0,0">

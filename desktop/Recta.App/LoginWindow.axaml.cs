@@ -34,7 +34,7 @@ public partial class LoginWindow : Window
         }
         try
         {
-            var users = await Task.Run(() => AppServices.Client.ListUsers());
+            var users = await ConnectionGate.RunAsync(() => AppServices.Client.ListUsers());
             if (users.Count == 0)
             {
                 LoginPanel.IsVisible = false;
@@ -68,7 +68,7 @@ public partial class LoginWindow : Window
         }
         catch (RectaException ex)
         {
-            ShowError(ex.Message);
+            ShowError(ConnectionGate.Friendly(ex));
         }
     }
 
@@ -122,7 +122,7 @@ public partial class LoginWindow : Window
         LoginButton.IsEnabled = false;
         try
         {
-            var session = await Task.Run(() => AppServices.Client.Login(username, password));
+            var session = await ConnectionGate.RunAsync(() => AppServices.Client.Login(username, password));
             AppServices.SetSession(session);
 
             if (session.MustChangePassword)
@@ -139,8 +139,8 @@ public partial class LoginWindow : Window
         catch (RectaException ex)
         {
             ShowError(ex.IsDatabase
-                ? $"数据库连接失败：{ex.Message}\n请检查网络与 .env.local 配置。"
-                : ex.Message);
+                ? $"数据库连接失败：{ConnectionGate.Friendly(ex)}\n请检查网络与 .env.local 配置。"
+                : ConnectionGate.Friendly(ex));
         }
         finally
         {
@@ -168,14 +168,14 @@ public partial class LoginWindow : Window
 
         try
         {
-            await Task.Run(() => AppServices.Client.ChangePassword(_pendingSession.UserId, oldPassword,
+            await ConnectionGate.RunAsync(() => AppServices.Client.ChangePassword(_pendingSession.UserId, oldPassword,
                                                                    newPassword));
             AppServices.SetSession(_pendingSession with { MustChangePassword = false });
             EnterMain();
         }
         catch (RectaException ex)
         {
-            ShowError(ex.Message);
+            ShowError(ConnectionGate.Friendly(ex));
         }
     }
 

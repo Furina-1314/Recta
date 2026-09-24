@@ -19,6 +19,8 @@ public partial class InflowPage : UserControl, IRefreshable
         Loaded += (_, _) => _ = LoadAsync();
     }
 
+    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+
     public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
@@ -33,9 +35,9 @@ public partial class InflowPage : UserControl, IRefreshable
 
         try
         {
-            var usersTask = Task.Run(() => AppServices.Client.ListUsers());
-            var studentsTask = Task.Run(() => AppServices.Client.ListStudents());
-            var inflowsTask = Task.Run(() => AppServices.Client.ListInflows());
+            var usersTask = ConnectionGate.RunAsync(() => AppServices.Client.ListUsers());
+            var studentsTask = ConnectionGate.RunAsync(() => AppServices.Client.ListStudents());
+            var inflowsTask = ConnectionGate.RunAsync(() => AppServices.Client.ListInflows());
             var users = await usersTask;
             var students = await studentsTask;
             var inflows = await inflowsTask;
@@ -101,19 +103,19 @@ public partial class InflowPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            RechargeError.Text = $"金额格式错误:{ex.Message}";
+            RechargeError.Text = $"金额格式错误:{ConnectionGate.Friendly(ex)}";
             return;
         }
         var source = (SourceBox.Text ?? "").Trim();
         if (source.Length == 0)
         {
-            RechargeError.Text = "来源必填(§5.3)。";
+            RechargeError.Text = "请填写来源。";
             return;
         }
 
         try
         {
-            await Task.Run(() => AppServices.Client.RecordInflow(
+            await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
                 session.UserId, "TO_STUDENT_SUB_ACCOUNT", cents, source, target.StudentId));
             AmountBox.Text = "";
             SourceBox.Text = "";
@@ -121,7 +123,7 @@ public partial class InflowPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            RechargeError.Text = ex.Message;
+            RechargeError.Text = ConnectionGate.Friendly(ex);
         }
     }
 }

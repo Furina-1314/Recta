@@ -5,19 +5,24 @@
 
     <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="28,24,28,16">
 
-        <StackPanel Spacing="2">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
             <TextBlock Classes="page-title" Text="审计" Margin="0" />
             <TextBlock Classes="secondary"
-                       Text="团支书专属全员统计看板 —— 提单频率、渠道分布、核减差额、驳回率与常见成因、审批办结响应时效" />
+                       Text="班委工作统计——提单数量、审批效率、驳回情况与常见原因(仅团支书)" />
         </StackPanel>
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
 
         <!-- 非团支书提示 -->
         <Border Grid.Row="1" x:Name="DeniedCard" Classes="card" IsVisible="False" Margin="0,14,0,0">
             <StackPanel Spacing="6">
-                <TextBlock Text="本看板为团支书专属(§5.1)" FontWeight="SemiBold"
+                <TextBlock Text="本看板仅团支书可见" FontWeight="SemiBold"
                            Foreground="{DynamicResource RectaDangerBrush}" />
                 <TextBlock Classes="secondary" TextWrapping="Wrap"
-                           Text="生活委员可见班费与代管看板,职能班委仅可见本人历史提单——请使用分户/入账/审批(本人)页面。" />
+                           Text="生活委员请前往分户与入账页面;职能班委可在审批页查看自己的单据。" />
             </StackPanel>
         </Border>
 

@@ -61,6 +61,8 @@ public static class SyncController
         try
         {
             var status = await Task.Run(() => AppServices.Client.SyncStatus());
+            // 连接门控校正:监听中/正常轮转视为在线;重连退避视为离线。
+            ConnectionGate.SetOnline(status.Listening || status.ReconnectAttempts == 0);
             StatusChanged?.Invoke(null, status);
 
             var drained = await Task.Run(() => AppServices.Client.SyncDrain());
@@ -69,9 +71,12 @@ public static class SyncController
                 EventsReceived?.Invoke(null, drained.Events);
             }
         }
-        catch (RectaException)
+        catch (RectaException ex)
         {
-            // 原生层自退避自恢复,GUI 保持静默
+            if (ex.IsDatabase)
+            {
+                ConnectionGate.SetOnline(false); // 拉取失败:离线,等待原生层退避自愈
+            }
         }
     }
 }

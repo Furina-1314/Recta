@@ -79,6 +79,14 @@
         <Setter Property="Foreground" Value="{DynamicResource RectaOnAccentBrush}" />
     </Style>
 
+    <!-- 紧凑模式(窗格收起至 56px):隐藏文字标签、图标居中,杜绝半截汉字 -->
+    <Style Selector="ListBox.compact TextBlock.nav-label">
+        <Setter Property="IsVisible" Value="False" />
+    </Style>
+    <Style Selector="ListBox.compact ListBoxItem">
+        <Setter Property="Padding" Value="18,9" />
+    </Style>
+
     <!-- 表层卡片:Surface + 1px Divider(唯一的"面板"语言) -->
     <Style Selector="Border.card">
         <Setter Property="Background" Value="{DynamicResource RectaSurfaceBrush}" />

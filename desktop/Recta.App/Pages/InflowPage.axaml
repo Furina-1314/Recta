@@ -5,16 +5,21 @@
 
     <Grid RowDefinitions="Auto,Auto,*" Margin="28,24,28,16">
 
-        <StackPanel Spacing="2">
+        <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
             <TextBlock Classes="page-title" Text="入账" Margin="0" />
             <TextBlock Classes="secondary"
-                       Text="全渠道入账台账 —— 每一笔流入的来源、金额、操作人与确切去向:灵活增资 / 系核销平账 / 同学补缴充值" />
+                       Text="每一笔收入都有来龙去脉——灵活公款增资、系报销核销、同学充值补缴" />
         </StackPanel>
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
 
         <!-- 充值补缴(生活委员) -->
         <Border Grid.Row="1" x:Name="RechargeCard" Classes="card" IsVisible="False" Margin="0,14,0,0">
             <StackPanel Spacing="10">
-                <TextBlock Text="同学班费补缴 / 充值(仅生活委员,§5.3)" FontWeight="SemiBold" />
+                <TextBlock Text="同学班费充值 / 补缴(仅生活委员)" FontWeight="SemiBold" />
                 <Grid ColumnDefinitions="220,12,140,12,2*,12,Auto,12,2*">
                     <ComboBox x:Name="StudentBox" HorizontalAlignment="Stretch" />
                     <TextBox Grid.Column="2" x:Name="AmountBox" Classes="money" TextAlignment="Right"

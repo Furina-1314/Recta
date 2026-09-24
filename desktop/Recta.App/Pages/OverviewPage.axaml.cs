@@ -29,7 +29,7 @@ public partial class OverviewPage : UserControl, IRefreshable
 
         try
         {
-            var overview = await Task.Run(() => AppServices.Client.GetOverview());
+            var overview = await ConnectionGate.RunAsync(() => AppServices.Client.GetOverview());
 
             FlexibleValue.Text = Format(overview.FlexibleBalanceCents);
             FacultyValue.Text = Format(overview.FacultyHangingCents);
@@ -37,10 +37,10 @@ public partial class OverviewPage : UserControl, IRefreshable
             AdvanceValue.Text = Format(overview.Custody.AdvanceTotalCents);
 
             ConservationFormula.Text =
-                $"Σb = {Format(overview.Custody.BalancesSumCents)} = " +
+                $"结余合计 {Format(overview.Custody.BalancesSumCents)} = " +
                 $"{Format(overview.Custody.CustodianCashCents)} − {Format(overview.Custody.AdvanceTotalCents)}";
             var conserved = overview.Custody.Conserved;
-            ConservationBadge.Text = conserved ? "恒等成立" : "恒等破坏";
+            ConservationBadge.Text = conserved ? "账目平衡" : "账目异常";
             var badgeParent = (Border)ConservationBadge.Parent!;
             badgeParent.Background = conserved
                 ? (IBrush?)Application.Current!.FindResource("RectaPositiveBrush")
@@ -54,8 +54,8 @@ public partial class OverviewPage : UserControl, IRefreshable
         catch (RectaException ex)
         {
             ShowLoadError(ex.IsDatabase
-                ? $"数据库连接失败:{ex.Message}"
-                : ex.Message);
+                ? $"数据库连接失败:{ConnectionGate.Friendly(ex)}"
+                : ConnectionGate.Friendly(ex));
         }
     }
 

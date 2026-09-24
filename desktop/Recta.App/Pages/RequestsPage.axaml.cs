@@ -61,8 +61,8 @@ public partial class RequestsPage : UserControl, IRefreshable
             var category = SelectedTag(CategoryFilter);
             var search = (SearchBox.Text ?? string.Empty).Trim();
 
-            var usersTask = Task.Run(() => AppServices.Client.ListUsers());
-            var requestsTask = Task.Run(() => AppServices.Client.ListRequests(
+            var usersTask = ConnectionGate.RunAsync(() => AppServices.Client.ListUsers());
+            var requestsTask = ConnectionGate.RunAsync(() => AppServices.Client.ListRequests(
                 string.IsNullOrEmpty(status) ? null : status,
                 string.IsNullOrEmpty(category) ? null : category));
             var users = await usersTask;
@@ -87,7 +87,7 @@ public partial class RequestsPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            PageSummary.Text = $"加载失败:{ex.Message}";
+            PageSummary.Text = $"加载失败:{ConnectionGate.Friendly(ex)}";
         }
     }
 
@@ -125,12 +125,12 @@ public partial class RequestsPage : UserControl, IRefreshable
 
         try
         {
-            _current = await Task.Run(() => AppServices.Client.GetRequest(row.Id));
+            _current = await ConnectionGate.RunAsync(() => AppServices.Client.GetRequest(row.Id));
             FillInspector(_current);
         }
         catch (RectaException ex)
         {
-            ShowInspectorError(ex.Message);
+            ShowInspectorError(ConnectionGate.Friendly(ex));
         }
     }
 
@@ -224,27 +224,27 @@ public partial class RequestsPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowInspectorError($"核准金额格式错误:{ex.Message}");
+            ShowInspectorError($"核准金额格式错误:{ConnectionGate.Friendly(ex)}");
             return;
         }
 
         var notes = (ReviewNotesBox.Text ?? "").Trim();
         if (approvedCents < _current.Request.AppliedAmountCents && notes.Length == 0)
         {
-            ShowInspectorError("核减批复原因必填(§5.2)。");
+            ShowInspectorError("核减时必须填写核减原因。");
             return;
         }
 
         try
         {
-            await Task.Run(() => AppServices.Client.ApproveRequest(
+            await ConnectionGate.RunAsync(() => AppServices.Client.ApproveRequest(
                 AppServices.Session!.UserId, _current.Request.Id, approvedCents,
                 notes.Length == 0 ? null : notes));
             await LoadAndReselectAsync();
         }
         catch (RectaException ex)
         {
-            ShowInspectorError(ex.Message);
+            ShowInspectorError(ConnectionGate.Friendly(ex));
         }
     }
 
@@ -259,19 +259,19 @@ public partial class RequestsPage : UserControl, IRefreshable
         var notes = (ReviewNotesBox.Text ?? "").Trim();
         if (notes.Length == 0)
         {
-            ShowInspectorError("驳回原因说明必填(§5.2)。");
+            ShowInspectorError("请填写驳回原因。");
             return;
         }
 
         try
         {
-            await Task.Run(() => AppServices.Client.RejectRequest(
+            await ConnectionGate.RunAsync(() => AppServices.Client.RejectRequest(
                 AppServices.Session!.UserId, _current.Request.Id, notes));
             await LoadAndReselectAsync();
         }
         catch (RectaException ex)
         {
-            ShowInspectorError(ex.Message);
+            ShowInspectorError(ConnectionGate.Friendly(ex));
         }
     }
 
@@ -287,7 +287,7 @@ public partial class RequestsPage : UserControl, IRefreshable
 
         try
         {
-            var outcome = await Task.Run(() => AppServices.Client.SettleRequest(
+            var outcome = await ConnectionGate.RunAsync(() => AppServices.Client.SettleRequest(
                 AppServices.Session!.UserId, _current.Request.Id, extra.Length == 0 ? null : extra));
 
             ResultPanel.IsVisible = true;
@@ -307,7 +307,7 @@ public partial class RequestsPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowInspectorError(ex.IsState ? ex.Message : $"办结失败:{ex.Message}");
+            ShowInspectorError(ex.IsState ? ConnectionGate.Friendly(ex) : $"办结失败:{ConnectionGate.Friendly(ex)}");
         }
     }
 

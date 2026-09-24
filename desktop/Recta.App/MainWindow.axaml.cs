@@ -57,7 +57,12 @@ public partial class MainWindow : Window
         // 增量同步:监听他端变更,自动刷新当前页与状态栏。
         SyncController.StatusChanged += OnSyncStatus;
         SyncController.EventsReceived += OnSyncEvents;
-        Closed += (_, _) => SyncController.Stop();
+        ConnectionGate.BusyChanged += OnBusyChanged;
+        Closed += (_, _) =>
+        {
+            SyncController.Stop();
+            ConnectionGate.BusyChanged -= OnBusyChanged;
+        };
         SyncController.Start();
 
         if (AppServices.SmokeMode)
@@ -110,6 +115,15 @@ public partial class MainWindow : Window
 
             await CaptureAsync(Path.Combine(outDir, "smoke-light.png"));
 
+            // 折叠态验证(RECTA_SMOKE_COMPACT=1):收起窗格后截第三张,检查标签隐藏与图标居中。
+            if (Environment.GetEnvironmentVariable("RECTA_SMOKE_COMPACT") == "1")
+            {
+                Shell.IsPaneOpen = false;
+                ApplyPaneMode();
+                await Task.Delay(400);
+                await CaptureAsync(Path.Combine(outDir, "smoke-compact.png"));
+            }
+
             if (Avalonia.Application.Current is not null)
             {
                 Avalonia.Application.Current.RequestedThemeVariant = Avalonia.Styling.ThemeVariant.Dark;
@@ -149,6 +163,23 @@ public partial class MainWindow : Window
     private void OnTogglePane(object? sender, RoutedEventArgs e)
     {
         Shell.IsPaneOpen = !Shell.IsPaneOpen;
+        ApplyPaneMode();
+    }
+
+    // 紧凑模式:收起时隐藏品牌文字与用户信息,导航仅留图标并居中。
+    private void ApplyPaneMode()
+    {
+        var open = Shell.IsPaneOpen;
+        BrandLogo.IsVisible = open;
+        BrandText.IsVisible = open;
+        UserNameText.IsVisible = open;
+        UserRoleText.IsVisible = open;
+        Nav.Classes.Set("compact", !open);
+    }
+
+    private void OnBusyChanged(object? sender, EventArgs e)
+    {
+        BusyText.IsVisible = ConnectionGate.IsBusy;
     }
 
     private void OnNavChanged(object? sender, SelectionChangedEventArgs e)
@@ -164,6 +195,7 @@ public partial class MainWindow : Window
             _pages[item.Tag] = page;
         }
         PageHost.Content = page;
+        PageAnimation.SlideIn(page); // UWP 式滑入过渡
         StatusLeft.Text = $"{item.Label}";
         _ = RefreshDbStatusAsync();
     }
@@ -187,24 +219,24 @@ public partial class MainWindow : Window
         if (!AppServices.NativeReady)
         {
             DbDot.Fill = Brushes.Firebrick;
-            DbText.Text = "原生核心未初始化";
+            DbText.Text = "服务未启动";
             return;
         }
 
         // 连接状态由同步监听(OnSyncStatus)统一呈现;此处仅刷新左下统计。
         try
         {
-            var overview = await Task.Run(() => AppServices.Client.GetOverview());
+            var overview = await ConnectionGate.RunAsync(() => AppServices.Client.GetOverview());
             if (overview.Custody.Conserved && DbText.Text is { } dbText && dbText.StartsWith("连接正常"))
             {
-                DbText.Text = "连接正常 · 实时监听 · 对账守恒";
+                DbText.Text = "连接正常 · 实时同步 · 账目平衡";
             }
             else if (!overview.Custody.Conserved)
             {
-                DbDot.Fill = Brushes.OrangeRed; // 守恒破坏属最高级异常,压过连接色
-                DbText.Text = "连接正常 · 守恒异常!";
+                DbDot.Fill = Brushes.OrangeRed; // 账目异常优先呈现
+                DbText.Text = "连接正常 · 账目异常，请联系管理员";
             }
-            StatusLeft.Text = $"单据 {overview.StatusCounts.Values.Sum()} 项 · 待审理 {CountOf(overview, "PENDING_REVIEW")} · 待办结 {CountOf(overview, "APPROVED")}";
+            StatusLeft.Text = $"共 {overview.StatusCounts.Values.Sum()} 笔单据 · 待审理 {CountOf(overview, "PENDING_REVIEW")} · 待办结 {CountOf(overview, "APPROVED")}";
         }
         catch (RectaException)
         {

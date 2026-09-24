@@ -9,7 +9,7 @@
                 <TextBlock Text="大盘" Classes="page-title" Margin="0" />
                 <Button Grid.Column="1" Content="刷新" Click="OnRefresh" VerticalAlignment="Bottom" />
             </Grid>
-            <TextBlock Text="全班资金核算总览 —— Σb = C_cash − A_advance 恒等式实时快照"
+            <TextBlock Text="全班班费总账实时总览——结余、代管与垫资一目了然"
                        Classes="secondary" Margin="0,0,0,4" />
 
             <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap"
@@ -47,19 +47,19 @@
                 </Border>
             </Grid>
 
-            <!-- 守恒恒等式 -->
+            <!-- 资金对账 -->
             <Border Classes="card">
                 <Grid ColumnDefinitions="Auto,*,Auto">
                     <StackPanel Spacing="4">
-                        <TextBlock Text="对账守恒定律(§4.1)" FontWeight="SemiBold" />
+                        <TextBlock Text="资金对账" FontWeight="SemiBold" />
                         <TextBlock Text="全班分户余额代数和 = 代管实存 − 生委垫资" Classes="secondary" />
                     </StackPanel>
                     <TextBlock x:Name="ConservationFormula" Grid.Column="1" HorizontalAlignment="Center"
                                VerticalAlignment="Center" Classes="money"
-                               FontSize="18" Text="Σb = 0.00 = 0.00 − 0.00" />
+                               FontSize="18" Text="结余合计 0.00 = 0.00 − 0.00" />
                     <Border Grid.Column="2" Padding="10,4" VerticalAlignment="Center"
                             Background="{DynamicResource RectaPositiveBrush}">
-                        <TextBlock x:Name="ConservationBadge" Text="恒等成立" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                        <TextBlock x:Name="ConservationBadge" Text="账目平衡" Foreground="#FFFFFF" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
             </Border>

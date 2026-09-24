@@ -35,13 +35,17 @@
 namespace {
 using json = nlohmann::json;
 
-struct State {
-    std::mutex mutex;
+// 服务集:init 时构建、shutdown 时整体换出。
+struct Services {
     std::unique_ptr<recta::storage::NeonContext> neon;
     std::unique_ptr<recta::core::AuthService> auth;
     std::unique_ptr<recta::core::WorkflowService> workflow;
     std::unique_ptr<recta::core::RosterService> roster;
-    bool ready = false;
+};
+
+struct State {
+    std::mutex mutex;
+    std::shared_ptr<Services> services;
 };
 
 State& S() {
@@ -49,11 +53,27 @@ State& S() {
     return state;
 }
 
+// 并发要害:导出骨架仅在取服务快照的一瞬持锁,数据库事务在锁外执行——
+// 否则任一慢查询会阻塞 UI 线程上的纯计算 P/Invoke(FormatMoney/Distribute),表现为界面卡死。
+thread_local std::shared_ptr<Services> t_services;
+
+Services* Svc() {
+    return t_services.get();
+}
+
 thread_local std::string g_last_error;
 
 struct NotReadyError final : std::runtime_error {
     using std::runtime_error::runtime_error;
 };
+
+std::shared_ptr<Services> LockServices() {
+    const std::lock_guard<std::mutex> lock(S().mutex);
+    if (!S().services) {
+        throw NotReadyError("原生核心未初始化：请先调用 recta_init / recta_init_test");
+    }
+    return S().services;
+}
 
 void SetError(const std::string& message) { g_last_error = message; }
 
@@ -110,10 +130,17 @@ int32_t WriteOut(char* buf, int32_t cap, const std::string& out) {
 // 出参为 JSON 字符串的导出统一骨架。
 template <typename Body>
 int32_t JsonCall(char* buf, int32_t cap, Body&& body) {
-    const std::lock_guard<std::mutex> lock(S().mutex);
     try {
-        return WriteOut(buf, cap, body());
+        t_services = LockServices();
     } catch (...) {
+        return DispatchError();
+    }
+    try {
+        const int32_t written = WriteOut(buf, cap, body());
+        t_services.reset();
+        return written;
+    } catch (...) {
+        t_services.reset();
         return DispatchError();
     }
 }
@@ -121,7 +148,33 @@ int32_t JsonCall(char* buf, int32_t cap, Body&& body) {
 // 无字符串出参的导出统一骨架。
 template <typename Body>
 int32_t Call(Body&& body) {
-    const std::lock_guard<std::mutex> lock(S().mutex);
+    try {
+        t_services = LockServices();
+    } catch (...) {
+        return DispatchError();
+    }
+    try {
+        body();
+        t_services.reset();
+        return 0;
+    } catch (...) {
+        t_services.reset();
+        return DispatchError();
+    }
+}
+
+// 纯领域函数(无数据库)专用骨架:不要求初始化,GUI 可在任何时刻调用。
+template <typename Body>
+int32_t PureJsonCall(char* buf, int32_t cap, Body&& body) {
+    try {
+        return WriteOut(buf, cap, body());
+    } catch (...) {
+        return DispatchError();
+    }
+}
+
+template <typename Body>
+int32_t PureCall(Body&& body) {
     try {
         body();
         return 0;
@@ -131,7 +184,7 @@ int32_t Call(Body&& body) {
 }
 
 void RequireReady() {
-    if (!S().ready) {
+    if (t_services == nullptr) {
         throw NotReadyError("原生核心未初始化：请先调用 recta_init / recta_init_test");
     }
 }
@@ -273,64 +326,78 @@ json SettleJson(const recta::core::SettlementResult& r) {
 
 // ---- 生命周期 ----
 
+namespace {
+std::shared_ptr<Services> MakeServices(std::string conn) {
+    auto svc = std::make_shared<Services>();
+    svc->neon = std::make_unique<recta::storage::NeonContext>(std::move(conn));
+    svc->auth = std::make_unique<recta::core::AuthService>(*svc->neon);
+    svc->workflow = std::make_unique<recta::core::WorkflowService>(*svc->neon);
+    svc->roster = std::make_unique<recta::core::RosterService>(*svc->neon);
+    return svc;
+}
+} // namespace
+
 int32_t recta_init(const char* connection_string) {
-    return Call([&] {
+    try {
         std::string conn = (connection_string != nullptr && *connection_string != '\0')
                                ? std::string(connection_string)
                                : recta::storage::LoadConnectionString();
-        S().neon = std::make_unique<recta::storage::NeonContext>(std::move(conn));
-        S().auth = std::make_unique<recta::core::AuthService>(*S().neon);
-        S().workflow = std::make_unique<recta::core::WorkflowService>(*S().neon);
-        S().roster = std::make_unique<recta::core::RosterService>(*S().neon);
-        S().ready = true;
-    });
+        auto next = MakeServices(std::move(conn));
+        const std::lock_guard<std::mutex> lock(S().mutex);
+        S().services = std::move(next); // 换出旧实例:进行中的旧事务凭 shared_ptr 存活至结束
+        return 0;
+    } catch (...) {
+        return DispatchError();
+    }
 }
 
 int32_t recta_init_test(void) {
-    return Call([&] {
+    try {
         const auto conn = recta::storage::TryLoadTestConnectionString();
         if (!conn) {
             throw std::runtime_error("未找到测试连接串(RECTA_TEST_DATABASE_URL / .env.test.local)");
         }
-        S().neon = std::make_unique<recta::storage::NeonContext>(*conn);
-        S().auth = std::make_unique<recta::core::AuthService>(*S().neon);
-        S().workflow = std::make_unique<recta::core::WorkflowService>(*S().neon);
-        S().roster = std::make_unique<recta::core::RosterService>(*S().neon);
-        S().ready = true;
-    });
+        auto next = MakeServices(*conn);
+        const std::lock_guard<std::mutex> lock(S().mutex);
+        S().services = std::move(next);
+        return 0;
+    } catch (...) {
+        return DispatchError();
+    }
 }
 
 void recta_shutdown(void) {
     const std::lock_guard<std::mutex> lock(S().mutex);
-    S().roster.reset();
-    S().workflow.reset();
-    S().auth.reset();
-    S().neon.reset();
-    S().ready = false;
+    S().services.reset();
 }
 
+// version/last_error 不依赖初始化,不可走 JsonCall 的服务快照前置。
 int32_t recta_version(char* buf, int32_t cap) {
-    return JsonCall(buf, cap, [] {
-        return "Recta native core 0.1.0 (RectaCApi)";
-    });
+    try {
+        return WriteOut(buf, cap, "Recta native core 0.1.0 (RectaCApi)");
+    } catch (...) {
+        return DispatchError();
+    }
 }
 
 int32_t recta_last_error(char* buf, int32_t cap) {
-    return JsonCall(buf, cap, [] {
-        return g_last_error.empty() ? std::string("(无错误)") : g_last_error;
-    });
+    try {
+        return WriteOut(buf, cap, g_last_error.empty() ? std::string("(无错误)") : g_last_error);
+    } catch (...) {
+        return DispatchError();
+    }
 }
 
 // ---- 领域纯函数 ----
 
 int32_t recta_money_format(int64_t cents, char* buf, int32_t cap) {
-    return JsonCall(buf, cap, [&] {
+    return PureJsonCall(buf, cap, [&] {
         return recta::Money(cents).to_plain_string();
     });
 }
 
 int32_t recta_money_parse(const char* text, int64_t* out_cents) {
-    return Call([&] {
+    return PureCall([&] {
         if (out_cents == nullptr) throw std::invalid_argument("out_cents 为空");
         *out_cents = recta::Money::parse(ReqStr(text)).to_cents();
     });
@@ -338,7 +405,7 @@ int32_t recta_money_parse(const char* text, int64_t* out_cents) {
 
 int32_t recta_distribute(int64_t total_cents, const char* ids_json, const char* tail_bearer_id,
                          char* buf, int32_t cap) {
-    return JsonCall(buf, cap, [&] {
+    return PureJsonCall(buf, cap, [&] {
         if (total_cents < 0) throw std::invalid_argument("平摊总额不能为负");
         const json ids = json::parse(ReqStr(ids_json));
         if (!ids.is_array()) throw std::invalid_argument("ids_json 必须是字符串数组");
@@ -372,7 +439,7 @@ int32_t recta_distribute(int64_t total_cents, const char* ids_json, const char* 
 int32_t recta_login(const char* username, const char* password, char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return SessionJson(S().auth->Login(ReqStr(username), ReqStr(password))).dump();
+        return SessionJson(Svc()->auth->Login(ReqStr(username), ReqStr(password))).dump();
     });
 }
 
@@ -380,7 +447,7 @@ int32_t recta_change_password(const char* user_id, const char* old_password,
                               const char* new_password) {
     return Call([&] {
         RequireReady();
-        S().auth->ChangePassword(ReqStr(user_id), ReqStr(old_password), ReqStr(new_password));
+        Svc()->auth->ChangePassword(ReqStr(user_id), ReqStr(old_password), ReqStr(new_password));
     });
 }
 
@@ -389,7 +456,7 @@ int32_t recta_create_user(const char* actor_id, const char* new_user_id, const c
                           int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return S().auth->CreateUser(ReqStr(actor_id), ReqStr(new_user_id), ReqStr(username),
+        return Svc()->auth->CreateUser(ReqStr(actor_id), ReqStr(new_user_id), ReqStr(username),
                                     ReqStr(display_name), ReqStr(role_name));
     });
 }
@@ -398,14 +465,14 @@ int32_t recta_reset_password(const char* actor_id, const char* target_user_id, c
                              int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return S().auth->ResetPassword(ReqStr(actor_id), ReqStr(target_user_id));
+        return Svc()->auth->ResetPassword(ReqStr(actor_id), ReqStr(target_user_id));
     });
 }
 
 int32_t recta_deactivate_user(const char* actor_id, const char* target_user_id) {
     return Call([&] {
         RequireReady();
-        S().auth->DeactivateUser(ReqStr(actor_id), ReqStr(target_user_id));
+        Svc()->auth->DeactivateUser(ReqStr(actor_id), ReqStr(target_user_id));
     });
 }
 
@@ -413,7 +480,7 @@ int32_t recta_update_display_name(const char* actor_id, const char* target_user_
                                   const char* display_name) {
     return Call([&] {
         RequireReady();
-        S().auth->UpdateDisplayName(ReqStr(actor_id), ReqStr(target_user_id), ReqStr(display_name));
+        Svc()->auth->UpdateDisplayName(ReqStr(actor_id), ReqStr(target_user_id), ReqStr(display_name));
     });
 }
 
@@ -421,7 +488,7 @@ int32_t recta_bootstrap_secretary(const char* username, const char* display_name
                                   int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return S().auth->BootstrapFirstSecretary(ReqStr(username), ReqStr(display_name));
+        return Svc()->auth->BootstrapFirstSecretary(ReqStr(username), ReqStr(display_name));
     });
 }
 
@@ -445,7 +512,7 @@ int32_t recta_submit_request(const char* actor_id, const char* title, const char
             }
             plan->tail_bearer_id = ReqStr(tail_bearer_id);
         }
-        *out_request_id = S().workflow->SubmitRequest(ReqStr(actor_id), ReqStr(title),
+        *out_request_id = Svc()->workflow->SubmitRequest(ReqStr(actor_id), ReqStr(title),
                                                       ParseCategory(category),
                                                       recta::Money(applied_cents), plan);
     });
@@ -455,7 +522,7 @@ int32_t recta_approve_request(const char* actor_id, int32_t request_id, int64_t 
                               const char* notes) {
     return Call([&] {
         RequireReady();
-        S().workflow->ApproveRequest(ReqStr(actor_id), request_id, recta::Money(approved_cents),
+        Svc()->workflow->ApproveRequest(ReqStr(actor_id), request_id, recta::Money(approved_cents),
                                      OptStr(notes));
     });
 }
@@ -463,7 +530,7 @@ int32_t recta_approve_request(const char* actor_id, int32_t request_id, int64_t 
 int32_t recta_reject_request(const char* actor_id, int32_t request_id, const char* notes) {
     return Call([&] {
         RequireReady();
-        S().workflow->RejectRequest(ReqStr(actor_id), request_id, ReqStr(notes));
+        Svc()->workflow->RejectRequest(ReqStr(actor_id), request_id, ReqStr(notes));
     });
 }
 
@@ -471,7 +538,7 @@ int32_t recta_settle_request(const char* actor_id, int32_t request_id, const cha
                              char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return SettleJson(S().workflow->SettleRequest(ReqStr(actor_id), request_id,
+        return SettleJson(Svc()->workflow->SettleRequest(ReqStr(actor_id), request_id,
                                                      OptStr(extra_notes)))
             .dump();
     });
@@ -499,21 +566,21 @@ int32_t recta_record_inflow(const char* actor_id, const char* inflow_json) {
         if (input.contains("voucher_url") && input.at("voucher_url").is_string()) {
             in.voucher_url = input.at("voucher_url").get<std::string>();
         }
-        S().workflow->RecordInflow(ReqStr(actor_id), in);
+        Svc()->workflow->RecordInflow(ReqStr(actor_id), in);
     });
 }
 
 int32_t recta_add_student(const char* actor_id, const char* student_id, const char* name) {
     return Call([&] {
         RequireReady();
-        S().roster->AddStudent(ReqStr(actor_id), ReqStr(student_id), ReqStr(name));
+        Svc()->roster->AddStudent(ReqStr(actor_id), ReqStr(student_id), ReqStr(name));
     });
 }
 
 int32_t recta_rename_student(const char* actor_id, const char* student_id, const char* name) {
     return Call([&] {
         RequireReady();
-        S().roster->RenameStudent(ReqStr(actor_id), ReqStr(student_id), ReqStr(name));
+        Svc()->roster->RenameStudent(ReqStr(actor_id), ReqStr(student_id), ReqStr(name));
     });
 }
 
@@ -527,7 +594,7 @@ int32_t recta_list_requests(const char* status_filter, const char* category_filt
         filter.status = OptStr(status_filter);
         filter.category = OptStr(category_filter);
         filter.applicant_id = OptStr(applicant_id_filter);
-        const auto requests = S().neon->ExecuteTransaction(
+        const auto requests = Svc()->neon->ExecuteTransaction(
             [&](pqxx::work& tx) { return recta::storage::RequestRepo::List(tx, filter); });
         json array = json::array();
         for (const auto& request : requests) array.push_back(RequestJson(request));
@@ -538,7 +605,7 @@ int32_t recta_list_requests(const char* status_filter, const char* category_filt
 int32_t recta_get_request(int32_t request_id, char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        const auto data = S().neon->ExecuteTransaction(
+        const auto data = Svc()->neon->ExecuteTransaction(
             [&](pqxx::work& tx)
                 -> std::optional<std::pair<recta::storage::ExpenseRequestRow,
                                            std::vector<recta::storage::SplitRow>>> {
@@ -559,7 +626,7 @@ int32_t recta_get_request(int32_t request_id, char* buf, int32_t cap) {
 int32_t recta_list_students(char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        const auto students = S().neon->ExecuteTransaction(
+        const auto students = Svc()->neon->ExecuteTransaction(
             [](pqxx::work& tx) { return recta::storage::StudentAccountsRepo::ListAll(tx); });
         json array = json::array();
         for (const auto& student : students) array.push_back(StudentJson(student));
@@ -570,7 +637,7 @@ int32_t recta_list_students(char* buf, int32_t cap) {
 int32_t recta_list_accounts(char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        const auto accounts = S().neon->ExecuteTransaction(
+        const auto accounts = Svc()->neon->ExecuteTransaction(
             [](pqxx::work& tx) { return recta::storage::EntityAccountsRepo::ListAll(tx); });
         json array = json::array();
         for (const auto& account : accounts) array.push_back(AccountJson(account));
@@ -581,7 +648,7 @@ int32_t recta_list_accounts(char* buf, int32_t cap) {
 int32_t recta_list_users(char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        const auto users = S().neon->ExecuteTransaction(
+        const auto users = Svc()->neon->ExecuteTransaction(
             [](pqxx::work& tx) { return recta::storage::UsersRepo::ListAll(tx); });
         json array = json::array();
         for (const auto& user : users) array.push_back(UserJson(user));
@@ -592,7 +659,7 @@ int32_t recta_list_users(char* buf, int32_t cap) {
 int32_t recta_get_overview(char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        const json overview = S().neon->ExecuteTransaction([](pqxx::work& tx) -> json {
+        const json overview = Svc()->neon->ExecuteTransaction([](pqxx::work& tx) -> json {
             const auto custody = recta::storage::StudentAccountsRepo::AggregateCustody(tx);
             const auto accounts = recta::storage::EntityAccountsRepo::ListAll(tx);
             const auto counts =
@@ -631,7 +698,7 @@ int32_t recta_fetch_change_events(int64_t after_seq, int32_t limit, char* buf, i
     return JsonCall(buf, cap, [&] {
         RequireReady();
         if (limit <= 0) limit = 100;
-        const auto events = S().neon->ExecuteTransaction(
+        const auto events = Svc()->neon->ExecuteTransaction(
             [&](pqxx::work& tx) {
                 return recta::storage::LedgerRepo::FetchChangeEventsSince(tx, after_seq, limit);
             });
@@ -655,7 +722,7 @@ int32_t recta_list_student_ledger(const char* student_id, int32_t limit, char* b
     return JsonCall(buf, cap, [&] {
         RequireReady();
         if (limit <= 0) limit = 100;
-        const auto entries = S().neon->ExecuteTransaction(
+        const auto entries = Svc()->neon->ExecuteTransaction(
             [&](pqxx::work& tx) {
                 return recta::storage::LedgerRepo::ListStudentLedger(tx, ReqStr(student_id), limit);
             });
@@ -684,7 +751,7 @@ int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
         if (limit <= 0) limit = 100;
-        const auto inflows = S().neon->ExecuteTransaction(
+        const auto inflows = Svc()->neon->ExecuteTransaction(
             [&](pqxx::work& tx) { return recta::storage::LedgerRepo::ListInflows(tx, limit); });
         json array = json::array();
         for (const auto& inflow : inflows) {
@@ -709,7 +776,7 @@ int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap) {
 int32_t recta_get_audit_statistics(const char* actor_id, char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return S().neon->ExecuteTransaction([&](pqxx::work& tx) -> std::string {
+        return Svc()->neon->ExecuteTransaction([&](pqxx::work& tx) -> std::string {
             // 审计看板为团支书专属(§5.1/§5.4)——服务端同样硬校验角色。
             const auto actor = recta::storage::UsersRepo::FindById(tx, ReqStr(actor_id));
             if (!actor || !actor->is_active || actor->role != "BRANCH_SECRETARY") {
@@ -812,7 +879,7 @@ int32_t recta_get_audit_statistics(const char* actor_id, char* buf, int32_t cap)
 int32_t recta_get_budget_overview(char* buf, int32_t cap) {
     return JsonCall(buf, cap, [&] {
         RequireReady();
-        return S().neon->ExecuteTransaction([](pqxx::work& tx) -> std::string {
+        return Svc()->neon->ExecuteTransaction([](pqxx::work& tx) -> std::string {
             // 近 6 个月:已办结出账(按渠道)与入账合计。
             const auto settled = tx.exec(
                 "SELECT to_char(date_trunc('month', settled_at), 'YYYY-MM') AS m, "
@@ -977,7 +1044,7 @@ int32_t recta_sync_start(void) {
             return; // 已在运行
         }
 
-        s.pull_conn_str = S().neon->connection_string();
+        s.pull_conn_str = Svc()->neon->connection_string();
         s.listen_conn_str = DeriveUnpooledConnectionString(s.pull_conn_str);
 
         // 游标对齐当前水位:只上报 start 之后的新事件。
@@ -1044,7 +1111,7 @@ int32_t recta_sync_drain(char* buf, int32_t cap) {
 #ifdef RECTA_DEV_TOOLS
 int32_t recta_dev_truncate_all(void) {    return Call([&] {
         RequireReady();
-        S().neon->ExecuteTransaction([](pqxx::work& tx) {
+        Svc()->neon->ExecuteTransaction([](pqxx::work& tx) {
             tx.exec("TRUNCATE account_ledger_entries, inflow_records, expense_splits, "
                     "expense_requests, accounts, student_personal_accounts, users "
                     "RESTART IDENTITY CASCADE");

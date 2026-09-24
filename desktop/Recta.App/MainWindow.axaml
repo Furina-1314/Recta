@@ -13,6 +13,8 @@
                 Padding="14,7">
             <Grid ColumnDefinitions="*,Auto">
                 <StackPanel Orientation="Horizontal" Spacing="20">
+                    <TextBlock x:Name="BusyText" Text="正在处理…" IsVisible="False"
+                               Foreground="{DynamicResource RectaAccentBrush}" FontWeight="SemiBold" />
                     <TextBlock x:Name="StatusLeft" Text="就绪" Opacity="0.78" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
@@ -36,16 +38,16 @@
                                     Click="OnTogglePane" AutomationProperties.Name="展开或收起导航">
                                 <TextBlock Text="&#xE700;" Classes="icon" FontSize="18" />
                             </Button>
-                            <Image Width="20" Height="20"
+                            <Image x:Name="BrandLogo" Width="20" Height="20"
                                    Source="avares://Recta.App/Assets/RectaLogo-256.png"
                                    VerticalAlignment="Center" />
                             <!-- 排印对齐 EQUORA:18px、约 0.12em 字距(Avalonia LetterSpacing 单位为 DIU,非 WinUI 千分 em) -->
-                            <TextBlock Text="RECTA" FontSize="18" LetterSpacing="2"
+                            <TextBlock x:Name="BrandText" Text="RECTA" FontSize="18" LetterSpacing="2"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
 
-                    <!-- 当前用户 -->
+                    <!-- 当前用户(紧凑模式自动隐藏文字) -->
                     <Border DockPanel.Dock="Bottom" Padding="14,10"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,0">
                         <StackPanel Spacing="2">
@@ -58,12 +60,13 @@
                     <ListBox x:Name="Nav" Background="Transparent" SelectionChanged="OnNavChanged"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemTemplate>
-                            <DataTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="16">
-                                    <TextBlock Text="{Binding Glyph}" Classes="icon" Width="20" />
-                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </DataTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal" Spacing="16">
+                                        <TextBlock Text="{Binding Glyph}" Classes="icon" Width="20" />
+                                        <TextBlock Text="{Binding Label}" Classes="nav-label"
+                                                   VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
                 </DockPanel>

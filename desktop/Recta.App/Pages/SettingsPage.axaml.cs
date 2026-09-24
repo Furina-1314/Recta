@@ -20,7 +20,7 @@ public partial class SettingsPage : UserControl
         }
         catch (RectaException ex)
         {
-            VersionText.Text = $"原生核心不可用:{ex.Message}";
+            VersionText.Text = $"原生核心不可用:{ConnectionGate.Friendly(ex)}";
         }
     }
 
@@ -53,7 +53,7 @@ public partial class SettingsPage : UserControl
 
         try
         {
-            await Task.Run(() => AppServices.Client.ChangePassword(
+            await ConnectionGate.RunAsync(() => AppServices.Client.ChangePassword(
                 session.UserId, OldPasswordBox.Text ?? "", NewPasswordBox.Text ?? ""));
             PasswordResultText.Foreground = this.FindResource("RectaPositiveBrush") as IBrush;
             PasswordResultText.Text = "口令已修改。";
@@ -63,7 +63,7 @@ public partial class SettingsPage : UserControl
         catch (RectaException ex)
         {
             PasswordResultText.Foreground = this.FindResource("RectaDangerBrush") as IBrush;
-            PasswordResultText.Text = ex.Message;
+            PasswordResultText.Text = ConnectionGate.Friendly(ex);
         }
     }
 }

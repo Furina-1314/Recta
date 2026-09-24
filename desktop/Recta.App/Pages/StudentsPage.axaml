@@ -5,20 +5,25 @@
 
     <Grid ColumnDefinitions="*,8,376" Margin="28,24,28,16">
 
-        <!-- 左:名单与守恒 -->
+        <!-- 左:名单与对账 -->
         <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
 
-            <StackPanel Spacing="2">
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
                 <TextBlock Classes="page-title" Text="分户" Margin="0" />
                 <TextBlock Classes="secondary"
-                           Text="班费纯个人独立分户 —— 无公共资金池,受托代管;允许透支为负,实质为向生活委员个人的无息借贷" />
+                           Text="每位同学的独立班费账户——余额为负表示暂由生活委员垫付,补缴后自动恢复" />
             </StackPanel>
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
 
-            <!-- 守恒三元组 -->
+            <!-- 对账三元组 -->
             <Grid Grid.Row="1" ColumnDefinitions="*,10,*,10,*,10,*" Margin="0,14">
                 <Border Classes="card" Padding="12,10">
                     <StackPanel Spacing="4">
-                        <TextBlock Classes="secondary" FontSize="12" Text="分户余额代数和 Σb" />
+                        <TextBlock Classes="secondary" FontSize="12" Text="全班结余合计" />
                         <TextBlock x:Name="SumValue" Classes="money money-value" Text="—" />
                     </StackPanel>
                 </Border>
@@ -38,7 +43,7 @@
                 </Border>
                 <Border Grid.Column="6" Classes="card" Padding="12,10">
                     <StackPanel Spacing="4">
-                        <TextBlock Classes="secondary" FontSize="12" Text="守恒 Σb = C − A" />
+                        <TextBlock Classes="secondary" FontSize="12" Text="账目平衡校验" />
                         <TextBlock x:Name="ConservedValue" Classes="money money-value" Text="—" />
                     </StackPanel>
                 </Border>
@@ -47,7 +52,7 @@
             <!-- 名单管理(团支书) -->
             <Border Grid.Row="2" x:Name="RosterCard" Classes="card" IsVisible="False" Margin="0,2,0,0">
                 <StackPanel Spacing="10">
-                    <TextBlock Text="同学名单管理(仅团支书,§5.3)" FontWeight="SemiBold" />
+                    <TextBlock Text="同学名单管理(仅团支书)" FontWeight="SemiBold" />
                     <Grid ColumnDefinitions="*,12,*,12,Auto,12,2*,12,Auto,12,Auto">
                         <TextBox x:Name="NewStudentIdBox" Watermark="学号" />
                         <TextBox Grid.Column="2" x:Name="NewStudentNameBox" Watermark="姓名" />
@@ -129,7 +134,7 @@
                 <Grid RowDefinitions="Auto,*">
                     <Border Background="{DynamicResource RectaPaneBrush}" Padding="20,10"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="个人流水(不可变)" FontWeight="SemiBold" />
+                        <TextBlock Text="历史流水" FontWeight="SemiBold" />
                     </Border>
                     <ScrollViewer Grid.Row="1">
                         <ItemsControl x:Name="LedgerList" Margin="16,10">

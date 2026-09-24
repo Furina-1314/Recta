@@ -12,7 +12,7 @@
             <Grid ColumnDefinitions="*,Auto,12,Auto">
                 <StackPanel Spacing="2">
                     <TextBlock Classes="page-title" Text="审批" Margin="0" />
-                    <TextBlock Classes="secondary" Text="动账审批台账 —— 两阶段流转:审批不动账,办结才扣账" />
+                    <TextBlock Classes="secondary" Text="全部资金申请单据——先审批、后办结,每一步都有迹可循" />
                 </StackPanel>
                 <Button Grid.Column="1" x:Name="NewRequestButton" VerticalAlignment="Bottom" Click="OnToggleNewRequest">
                     <StackPanel Orientation="Horizontal" Spacing="8">
@@ -168,7 +168,7 @@
                             <TextBlock x:Name="ReviewNotesText" TextWrapping="Wrap" IsVisible="False" />
 
                             <TextBlock x:Name="SettleNotesLabel" Classes="secondary" FontSize="12"
-                                       Text="办结批复(含垫资披露)" IsVisible="False" />
+                                       Text="办结批复" IsVisible="False" />
                             <TextBlock x:Name="SettleNotesText" TextWrapping="Wrap" IsVisible="False" />
                         </StackPanel>
 
@@ -196,10 +196,10 @@
                             <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
                             <TextBlock Text="审批" FontWeight="SemiBold" />
                             <TextBlock Classes="secondary" FontSize="12"
-                                       Text="核准金额(元)——小于申报即为核减,须填核减理由" />
+                                       Text="核准金额(元)——低于申报即为核减,须填写核减原因" />
                             <TextBox x:Name="ApproveAmountBox" Classes="money" TextAlignment="Right" />
                             <TextBox x:Name="ReviewNotesBox" MinHeight="64" TextWrapping="Wrap"
-                                     Watermark="核减理由 / 审批意见(核减必填,驳回必填)" AcceptsReturn="True" />
+                                     Watermark="核减原因 / 审批意见(核减或驳回时必填)" AcceptsReturn="True" />
                             <Grid ColumnDefinitions="*,12,*">
                                 <Button Classes="danger" Content="驳回" Click="OnReject" />
                                 <Button Grid.Column="2" Classes="accent" Content="核准出账" Click="OnApprove" />

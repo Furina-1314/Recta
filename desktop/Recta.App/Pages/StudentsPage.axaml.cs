@@ -20,6 +20,8 @@ public partial class StudentsPage : UserControl, IRefreshable
         Loaded += (_, _) => _ = LoadAsync();
     }
 
+    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+
     public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
@@ -36,13 +38,13 @@ public partial class StudentsPage : UserControl, IRefreshable
 
         try
         {
-            var students = await Task.Run(() => AppServices.Client.ListStudents());
-            var overview = await Task.Run(() => AppServices.Client.GetOverview());
+            var students = await ConnectionGate.RunAsync(() => AppServices.Client.ListStudents());
+            var overview = await ConnectionGate.RunAsync(() => AppServices.Client.GetOverview());
 
             SumValue.Text = RectaClient.FormatMoney(overview.Custody.BalancesSumCents);
             CashValue.Text = RectaClient.FormatMoney(overview.Custody.CustodianCashCents);
             AdvanceValue.Text = RectaClient.FormatMoney(overview.Custody.AdvanceTotalCents);
-            ConservedValue.Text = overview.Custody.Conserved ? "恒等成立" : "恒等破坏!";
+            ConservedValue.Text = overview.Custody.Conserved ? "平衡" : "异常!";
 
             Rows.ItemsSource = students.Select(s => new StudentRowVm(
                 s.StudentId, s.Name, s.BalanceCents,
@@ -63,12 +65,12 @@ public partial class StudentsPage : UserControl, IRefreshable
                   $"。合计 {RectaClient.FormatMoney(overview.Custody.AdvanceTotalCents)} 元。";
 
             SummaryText.Text =
-                $"共 {students.Count} 名同学 | 透支 {overdrawn.Count} 人 | 守恒" +
-                (overview.Custody.Conserved ? "成立" : "破坏!");
+                $"共 {students.Count} 名同学 | 透支 {overdrawn.Count} 人 | 账目" +
+                (overview.Custody.Conserved ? "平衡" : "异常!");
         }
         catch (RectaException ex)
         {
-            SummaryText.Text = $"加载失败:{ex.Message}";
+            SummaryText.Text = $"加载失败:{ConnectionGate.Friendly(ex)}";
         }
     }
 
@@ -83,7 +85,7 @@ public partial class StudentsPage : UserControl, IRefreshable
                           (row.BalanceCents < 0 ? "透支部分构成对生活委员个人的无息借贷。" : "结余由生活委员受托代管。");
         try
         {
-            var entries = await Task.Run(() => AppServices.Client.ListStudentLedger(row.StudentId));
+            var entries = await ConnectionGate.RunAsync(() => AppServices.Client.ListStudentLedger(row.StudentId));
             LedgerList.ItemsSource = entries.Select(entry => new LedgerLineVm(
                 TypeLabel(entry.EntryType),
                 entry.ChangeCents >= 0
@@ -96,7 +98,7 @@ public partial class StudentsPage : UserControl, IRefreshable
         catch (RectaException ex)
         {
             LedgerList.ItemsSource = Array.Empty<LedgerLineVm>();
-            DetailText.Text = $"流水加载失败:{ex.Message}";
+            DetailText.Text = $"流水加载失败:{ConnectionGate.Friendly(ex)}";
         }
     }
 
@@ -127,14 +129,14 @@ public partial class StudentsPage : UserControl, IRefreshable
 
         try
         {
-            await Task.Run(() => AppServices.Client.AddStudent(session.UserId, id, name));
+            await ConnectionGate.RunAsync(() => AppServices.Client.AddStudent(session.UserId, id, name));
             NewStudentIdBox.Text = "";
             NewStudentNameBox.Text = "";
             await LoadAsync();
         }
         catch (RectaException ex)
         {
-            RosterError.Text = ex.Message;
+            RosterError.Text = ConnectionGate.Friendly(ex);
         }
     }
 
@@ -155,13 +157,13 @@ public partial class StudentsPage : UserControl, IRefreshable
 
         try
         {
-            await Task.Run(() => AppServices.Client.RenameStudent(session.UserId, row.StudentId, name));
+            await ConnectionGate.RunAsync(() => AppServices.Client.RenameStudent(session.UserId, row.StudentId, name));
             RenameBox.Text = "";
             await LoadAsync();
         }
         catch (RectaException ex)
         {
-            RosterError.Text = ex.Message;
+            RosterError.Text = ConnectionGate.Friendly(ex);
         }
     }
 }

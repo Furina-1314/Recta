@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Recta.App.NativeInterop;
 
 namespace Recta.App.Pages;
@@ -14,6 +15,8 @@ public partial class AuditPage : UserControl, IRefreshable
         InitializeComponent();
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
 
     public Task RefreshAsync() => LoadAsync();
 
@@ -72,7 +75,7 @@ public partial class AuditPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            FooterText.Text = $"加载失败:{ex.Message}";
+            FooterText.Text = $"加载失败:{ConnectionGate.Friendly(ex)}";
         }
     }
 

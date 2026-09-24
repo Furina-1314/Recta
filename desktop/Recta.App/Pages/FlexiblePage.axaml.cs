@@ -26,7 +26,7 @@ public partial class FlexiblePage : UserControl, IRefreshable
 
         try
         {
-            var accounts = await Task.Run(() => AppServices.Client.ListAccounts());
+            var accounts = await ConnectionGate.RunAsync(() => AppServices.Client.ListAccounts());
             var flexible = accounts.FirstOrDefault(a => a.Type == "FLEXIBLE_PUBLIC");
             BalanceValue.Text = flexible is null ? "未初始化" : RectaClient.FormatMoney(flexible.BalanceCents);
         }
@@ -53,19 +53,19 @@ public partial class FlexiblePage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowInflowError($"金额格式错误:{ex.Message}");
+            ShowInflowError($"金额格式错误:{ConnectionGate.Friendly(ex)}");
             return;
         }
         var source = (InflowSourceBox.Text ?? "").Trim();
         if (source.Length == 0)
         {
-            ShowInflowError("来源凭据必填(§5.3)。");
+            ShowInflowError("请填写来源。");
             return;
         }
 
         try
         {
-            await Task.Run(() => AppServices.Client.RecordInflow(
+            await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
                 session.UserId, "TO_FLEXIBLE_ACCOUNT", cents, source));
             InflowAmountBox.Text = "";
             InflowSourceBox.Text = "";
@@ -73,7 +73,7 @@ public partial class FlexiblePage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowInflowError(ex.Message);
+            ShowInflowError(ConnectionGate.Friendly(ex));
         }
     }
 

@@ -16,7 +16,7 @@
                 </StackPanel>
             </Border>
 
-            <!-- 修改口令(仅本人,§5.1) -->
+            <!-- 修改口令(仅本人) -->
             <Border Classes="card">
                 <StackPanel Spacing="10">
                     <TextBlock Text="修改本人口令" FontWeight="SemiBold" />

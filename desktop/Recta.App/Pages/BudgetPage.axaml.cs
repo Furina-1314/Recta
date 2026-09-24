@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 using Recta.App.NativeInterop;
 
 namespace Recta.App.Pages;
@@ -15,6 +16,8 @@ public partial class BudgetPage : UserControl, IRefreshable
         Loaded += (_, _) => _ = LoadAsync();
     }
 
+    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+
     public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
@@ -27,8 +30,8 @@ public partial class BudgetPage : UserControl, IRefreshable
 
         try
         {
-            var overviewTask = Task.Run(() => AppServices.Client.GetOverview());
-            var budgetTask = Task.Run(() => AppServices.Client.GetBudgetOverview());
+            var overviewTask = ConnectionGate.RunAsync(() => AppServices.Client.GetOverview());
+            var budgetTask = ConnectionGate.RunAsync(() => AppServices.Client.GetBudgetOverview());
             var overview = await overviewTask;
             var budget = await budgetTask;
 
@@ -50,11 +53,11 @@ public partial class BudgetPage : UserControl, IRefreshable
                     RectaClient.FormatMoney(m.InflowCents));
             }).ToList();
 
-            FooterText.Text = "近月走势按已办结出账与入账台账聚合;金额均为整数分换算的定点展示。";
+            FooterText.Text = "按已办结单据与入账记录自动汇总。";
         }
         catch (RectaException ex)
         {
-            FooterText.Text = $"加载失败:{ex.Message}";
+            FooterText.Text = $"加载失败:{ConnectionGate.Friendly(ex)}";
         }
     }
 }

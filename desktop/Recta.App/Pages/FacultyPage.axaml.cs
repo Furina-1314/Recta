@@ -26,14 +26,14 @@ public partial class FacultyPage : UserControl, IRefreshable
 
         try
         {
-            var accounts = await Task.Run(() => AppServices.Client.ListAccounts());
+            var accounts = await ConnectionGate.RunAsync(() => AppServices.Client.ListAccounts());
             var faculty = accounts.FirstOrDefault(a => a.Type == "FACULTY_REIMBURSE");
             HangingValue.Text = faculty is null ? "未初始化" : RectaClient.FormatMoney(faculty.BalanceCents);
 
             if (isLife)
             {
                 // 关联单据:仅已办结的系报销单。
-                var settled = await Task.Run(() => AppServices.Client.ListRequests("SETTLED", "FACULTY", null));
+                var settled = await ConnectionGate.RunAsync(() => AppServices.Client.ListRequests("SETTLED", "FACULTY", null));
                 RelatedBox.ItemsSource = settled
                     .Select(r => new RelatedOption(r.Id, $"#{r.Id:D3} {r.Title} " +
                         $"{RectaClient.FormatMoney(r.SettledAmountCents ?? 0)} 元"))
@@ -69,13 +69,13 @@ public partial class FacultyPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowRedeemError($"金额格式错误:{ex.Message}");
+            ShowRedeemError($"金额格式错误:{ConnectionGate.Friendly(ex)}");
             return;
         }
         var source = (RedeemSourceBox.Text ?? "").Trim();
         if (source.Length == 0)
         {
-            ShowRedeemError("来源必填(§5.3)。");
+            ShowRedeemError("请填写来源。");
             return;
         }
         if (RelatedBox.SelectedItem is not RelatedOption related)
@@ -86,7 +86,7 @@ public partial class FacultyPage : UserControl, IRefreshable
 
         try
         {
-            await Task.Run(() => AppServices.Client.RecordInflow(
+            await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
                 session.UserId, "TO_FACULTY_REIMBURSE", cents, source, null, related.RequestId));
             RedeemAmountBox.Text = "";
             RedeemSourceBox.Text = "";
@@ -94,7 +94,7 @@ public partial class FacultyPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
-            ShowRedeemError(ex.Message);
+            ShowRedeemError(ConnectionGate.Friendly(ex));
         }
     }
 

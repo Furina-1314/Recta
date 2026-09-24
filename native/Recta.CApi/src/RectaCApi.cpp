@@ -20,6 +20,7 @@
 
 #include <algorithm>
 #include <cstring>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -698,6 +699,151 @@ int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap) {
             });
         }
         return json{{"inflows", array}}.dump();
+    });
+}
+
+int32_t recta_get_audit_statistics(const char* actor_id, char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        RequireReady();
+        return S().neon->ExecuteTransaction([&](pqxx::work& tx) -> std::string {
+            // 审计看板为团支书专属(§5.1/§5.4)——服务端同样硬校验角色。
+            const auto actor = recta::storage::UsersRepo::FindById(tx, ReqStr(actor_id));
+            if (!actor || !actor->is_active || actor->role != "BRANCH_SECRETARY") {
+                throw recta::PermissionDeniedException("权限拒绝：全员统计看板仅团支书可访问");
+            }
+
+            // 全局指标:提单量/驳回率/申报 vs 核准/审批与办结平均响应(分钟)。
+            const auto overall = tx.exec(
+                "SELECT COUNT(*), "
+                "       COUNT(*) FILTER (WHERE status = 'REJECTED'), "
+                "       COALESCE(SUM(applied_amount_cents), 0), "
+                "       COALESCE(SUM(approved_amount_cents), 0), "
+                "       AVG(EXTRACT(EPOCH FROM (reviewed_at - created_at)) / 60.0) "
+                "         FILTER (WHERE reviewed_at IS NOT NULL), "
+                "       AVG(EXTRACT(EPOCH FROM (settled_at - reviewed_at)) / 60.0) "
+                "         FILTER (WHERE settled_at IS NOT NULL) "
+                "FROM expense_requests");
+            const auto& o = overall.front();
+
+            json members = json::array();
+            const auto per_member = tx.exec(
+                "SELECT u.id, u.display_name, "
+                "       COUNT(r.id) AS submitted, "
+                "       COUNT(*) FILTER (WHERE r.status = 'REJECTED') AS rejected, "
+                "       COUNT(*) FILTER (WHERE r.status = 'SETTLED') AS settled, "
+                "       COALESCE(SUM(r.applied_amount_cents), 0) AS applied, "
+                "       COALESCE(SUM(r.approved_amount_cents), 0) AS approved, "
+                "       COALESCE(SUM(r.settled_amount_cents), 0) AS settled_amt, "
+                "       AVG(EXTRACT(EPOCH FROM (r.reviewed_at - r.created_at)) / 60.0) "
+                "         FILTER (WHERE r.reviewed_at IS NOT NULL) AS avg_review_min, "
+                "       AVG(EXTRACT(EPOCH FROM (r.settled_at - r.reviewed_at)) / 60.0) "
+                "         FILTER (WHERE r.settled_at IS NOT NULL) AS avg_settle_min "
+                "FROM users u LEFT JOIN expense_requests r ON r.applicant_id = u.id "
+                "GROUP BY u.id, u.display_name "
+                "ORDER BY submitted DESC, u.id");
+            std::map<std::string, json> channel_by_member;
+            const auto channels = tx.exec(
+                "SELECT applicant_id, account_category, COUNT(*) FROM expense_requests "
+                "GROUP BY applicant_id, account_category");
+            for (const auto& row : channels) {
+                channel_by_member[row[0].as<std::string>()][row[1].as<std::string>()] =
+                    row[2].as<int64_t>();
+            }
+
+            for (const auto& row : per_member) {
+                auto id = row["id"].as<std::string>();
+                members.push_back(json{
+                    {"applicant_id", id},
+                    {"display_name", row["display_name"].as<std::string>()},
+                    {"submitted", row["submitted"].as<int64_t>()},
+                    {"rejected", row["rejected"].as<int64_t>()},
+                    {"settled", row["settled"].as<int64_t>()},
+                    {"applied_cents", row["applied"].as<int64_t>()},
+                    {"approved_cents", row["approved"].as<int64_t>()},
+                    {"settled_cents", row["settled_amt"].as<int64_t>()},
+                    {"avg_review_minutes",
+                     row["avg_review_min"].as<std::optional<double>>()},
+                    {"avg_settle_minutes",
+                     row["avg_settle_min"].as<std::optional<double>>()},
+                    {"channels", channel_by_member.contains(id)
+                                     ? channel_by_member.at(id)
+                                     : json::object()},
+                });
+            }
+
+            json reasons = json::array();
+            const auto rejection_reasons = tx.exec(
+                "SELECT review_notes, COUNT(*) AS c FROM expense_requests "
+                "WHERE status = 'REJECTED' AND review_notes IS NOT NULL "
+                "GROUP BY review_notes ORDER BY c DESC, review_notes LIMIT 5");
+            for (const auto& row : rejection_reasons) {
+                reasons.push_back(json{
+                    {"reason", row[0].as<std::string>()},
+                    {"count", row[1].as<int64_t>()},
+                });
+            }
+
+            const int64_t submitted = o[0].as<int64_t>();
+            const int64_t rejected = o[1].as<int64_t>();
+            return json{
+                {"overall",
+                 {
+                     {"submitted", submitted},
+                     {"rejected", rejected},
+                     {"rejection_rate_pct",
+                      submitted > 0 ? std::round(rejected * 1000.0 / submitted) / 10.0 : 0.0},
+                     {"total_applied_cents", o[2].as<int64_t>()},
+                     {"total_approved_cents", o[3].as<int64_t>()},
+                     {"reduction_cents", o[2].as<int64_t>() - o[3].as<int64_t>()},
+                     {"avg_review_minutes", o[4].as<std::optional<double>>()},
+                     {"avg_settle_minutes", o[5].as<std::optional<double>>()},
+                 }},
+                {"rejection_reasons", reasons},
+                {"members", members},
+            }.dump();
+        });
+    });
+}
+
+int32_t recta_get_budget_overview(char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        RequireReady();
+        return S().neon->ExecuteTransaction([](pqxx::work& tx) -> std::string {
+            // 近 6 个月:已办结出账(按渠道)与入账合计。
+            const auto settled = tx.exec(
+                "SELECT to_char(date_trunc('month', settled_at), 'YYYY-MM') AS m, "
+                "       account_category, "
+                "       SUM(settled_amount_cents) "
+                "FROM expense_requests WHERE status = 'SETTLED' "
+                "GROUP BY 1, 2 ORDER BY 1 DESC LIMIT 24");
+            const auto inflows = tx.exec(
+                "SELECT to_char(date_trunc('month', created_at), 'YYYY-MM') AS m, "
+                "       SUM(amount_cents) "
+                "FROM inflow_records GROUP BY 1 ORDER BY 1 DESC LIMIT 6");
+
+            std::map<std::string, json> by_month; // 逆序已按月降序
+            for (const auto& row : settled) {
+                by_month[row[0].as<std::string>()]["settled_by_channel"]
+                        [row[1].as<std::string>()] = row[2].as<int64_t>();
+            }
+            for (const auto& row : inflows) {
+                by_month[row[0].as<std::string>()]["inflow_cents"] = row[1].as<int64_t>();
+            }
+
+            json months = json::array();
+            for (auto it = by_month.rbegin(); it != by_month.rend(); ++it) {
+                json month = json{{"month", it->first}};
+                if (it->second.contains("settled_by_channel")) {
+                    month["settled_by_channel"] = it->second["settled_by_channel"];
+                } else {
+                    month["settled_by_channel"] = json::object();
+                }
+                month["inflow_cents"] = it->second.value("inflow_cents", int64_t{0});
+                months.push_back(std::move(month));
+            }
+
+            return json{{"months", months}}.dump();
+        });
     });
 }
 

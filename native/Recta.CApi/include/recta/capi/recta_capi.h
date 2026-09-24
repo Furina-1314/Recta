@@ -107,6 +107,10 @@ RECTA_API int32_t recta_list_student_ledger(const char* student_id, int32_t limi
                                             int32_t cap);
 /* 全渠道入账台账:{"inflows":[...]}(最新在前)。 */
 RECTA_API int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap);
+/* 团支书专属全员统计看板(§5.4):overall + rejection_reasons + members。 */
+RECTA_API int32_t recta_get_audit_statistics(const char* actor_id, char* buf, int32_t cap);
+/* 预算只读概览:近月出账(按渠道)与入账走势。 */
+RECTA_API int32_t recta_get_budget_overview(char* buf, int32_t cap);
 
 /* ---- 开发/测试专用(编译期 RECTA_DEV_TOOLS 门控;发布构建必须关闭该选项) ---- */
 #ifdef RECTA_DEV_TOOLS

@@ -1,0 +1,86 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Pages"
+             x:Class="Recta.App.Pages.BudgetPage">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="28,24,28,16">
+
+        <StackPanel Spacing="2">
+            <TextBlock Classes="page-title" Text="预算" Margin="0" />
+            <TextBlock Classes="secondary"
+                       Text="只读概览 —— 各资金通道当前余额与近月动账走势(本模块无写入路径)" />
+        </StackPanel>
+
+        <!-- 通道余额 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,10,*,10,*" Margin="0,14,0,0">
+            <Border Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="灵活公款余额" />
+                    <TextBlock x:Name="FlexibleValue" Classes="money money-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="系报销挂账(应收)" />
+                    <TextBlock x:Name="FacultyValue" Classes="money money-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="4" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="班费代管(Σb)" />
+                    <TextBlock x:Name="ClassFundValue" Classes="money money-value" Text="—" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- 月度走势表 -->
+        <Border Grid.Row="2" Classes="card" Padding="0" Margin="0,10,0,0" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+                <Border Background="{DynamicResource RectaPaneBrush}"
+                        BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="120,140,140,140,160,160">
+                        <Grid.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="FontSize" Value="12" />
+                                <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                            </Style>
+                        </Grid.Styles>
+                        <TextBlock Text="月份" Margin="14,8,8,8" />
+                        <TextBlock Grid.Column="1" Text="灵活出账(元)" Classes="money" Margin="8,8,4,8" />
+                        <TextBlock Grid.Column="2" Text="系报出账(元)" Classes="money" Margin="8,8,4,8" />
+                        <TextBlock Grid.Column="3" Text="班费出账(元)" Classes="money" Margin="8,8,4,8" />
+                        <TextBlock Grid.Column="4" Text="出账合计(元)" Classes="money" Margin="8,8,4,8" />
+                        <TextBlock Grid.Column="5" Text="入账合计(元)" Classes="money" Margin="8,8,12,8" />
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl x:Name="Rows">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:BudgetRowVm">
+                                <Border BorderBrush="{DynamicResource RectaDividerBrush}"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="120,140,140,140,160,160" MinHeight="40">
+                                        <TextBlock Text="{Binding Month}" VerticalAlignment="Center" Margin="14,0,8,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Flexible}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="8,0,4,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Faculty}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="8,0,4,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding ClassFund}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="8,0,4,0" />
+                                        <TextBlock Grid.Column="4" Text="{Binding OutflowTotal}" Classes="money"
+                                                   FontWeight="SemiBold" VerticalAlignment="Center" Margin="8,0,4,0" />
+                                        <TextBlock Grid.Column="5" Text="{Binding InflowTotal}" Classes="money"
+                                                   Foreground="{DynamicResource RectaPositiveBrush}"
+                                                   VerticalAlignment="Center" Margin="8,0,12,0" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" x:Name="FooterText" Classes="secondary" Margin="0,8,0,0" Text="—" />
+    </Grid>
+</UserControl>

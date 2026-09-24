@@ -1,0 +1,131 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Pages"
+             x:Class="Recta.App.Pages.AuditPage">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="28,24,28,16">
+
+        <StackPanel Spacing="2">
+            <TextBlock Classes="page-title" Text="审计" Margin="0" />
+            <TextBlock Classes="secondary"
+                       Text="团支书专属全员统计看板 —— 提单频率、渠道分布、核减差额、驳回率与常见成因、审批办结响应时效" />
+        </StackPanel>
+
+        <!-- 非团支书提示 -->
+        <Border Grid.Row="1" x:Name="DeniedCard" Classes="card" IsVisible="False" Margin="0,14,0,0">
+            <StackPanel Spacing="6">
+                <TextBlock Text="本看板为团支书专属(§5.1)" FontWeight="SemiBold"
+                           Foreground="{DynamicResource RectaDangerBrush}" />
+                <TextBlock Classes="secondary" TextWrapping="Wrap"
+                           Text="生活委员可见班费与代管看板,职能班委仅可见本人历史提单——请使用分户/入账/审批(本人)页面。" />
+            </StackPanel>
+        </Border>
+
+        <!-- 全局指标卡 -->
+        <Grid Grid.Row="1" x:Name="OverallCards" ColumnDefinitions="*,10,*,10,*,10,*,10,*" Margin="0,14,0,0">
+            <Border Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="提单总量" />
+                    <TextBlock x:Name="SubmittedValue" Classes="stat-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="驳回率" />
+                    <TextBlock x:Name="RejectionRateValue" Classes="stat-value"
+                               Foreground="{DynamicResource RectaDangerBrush}" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="4" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="核减差额(申报−核准)" />
+                    <TextBlock x:Name="ReductionValue" Classes="money money-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="6" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="平均审批响应" />
+                    <TextBlock x:Name="AvgReviewValue" Classes="stat-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="8" Classes="card" Padding="12,10">
+                <StackPanel Spacing="4">
+                    <TextBlock Classes="secondary" FontSize="12" Text="平均办结响应" />
+                    <TextBlock x:Name="AvgSettleValue" Classes="stat-value" Text="—" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- 常见驳回成因 -->
+        <Border Grid.Row="2" x:Name="ReasonsCard" Classes="card" Margin="0,10,0,0" Padding="16,12">
+            <StackPanel Spacing="6">
+                <TextBlock Text="常见驳回成因(Top 5)" FontWeight="SemiBold" />
+                <TextBlock x:Name="ReasonsText" FontSize="13" TextWrapping="Wrap" Text="—" />
+            </StackPanel>
+        </Border>
+
+        <!-- 逐人指标表 -->
+        <Border Grid.Row="3" Classes="card" Padding="0" Margin="0,10,0,0" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+                <Border Background="{DynamicResource RectaPaneBrush}"
+                        BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,70,70,70,120,120,120,150,120,110">
+                        <Grid.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="FontSize" Value="12" />
+                                <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                            </Style>
+                        </Grid.Styles>
+                        <TextBlock Text="提单人" Margin="14,8,8,8" />
+                        <TextBlock Grid.Column="1" Text="提单" Classes="money" Margin="8,8,4,8" />
+                        <TextBlock Grid.Column="2" Text="驳回" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="3" Text="办结" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="4" Text="申报(元)" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="5" Text="核准(元)" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="6" Text="出账(元)" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="7" Text="渠道分布" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="8" Text="均审批(分)" Classes="money" Margin="4,8,4,8" />
+                        <TextBlock Grid.Column="9" Text="均办结(分)" Classes="money" Margin="4,8,12,8" />
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl x:Name="Rows">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:AuditRowVm">
+                                <Border BorderBrush="{DynamicResource RectaDividerBrush}"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="*,70,70,70,120,120,120,150,120,110" MinHeight="42">
+                                        <TextBlock Text="{Binding Name}" VerticalAlignment="Center" Margin="14,0,8,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Submitted}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="8,0,4,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding Rejected}" Classes="money"
+                                                   Foreground="{DynamicResource RectaDangerBrush}"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding Settled}" Classes="money"
+                                                   Foreground="{DynamicResource RectaPositiveBrush}"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="4" Text="{Binding AppliedText}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="5" Text="{Binding ApprovedText}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="6" Text="{Binding SettledText}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="7" Text="{Binding Channels}" FontSize="12"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0"
+                                                   TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Grid.Column="8" Text="{Binding AvgReview}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="4,0,4,0" />
+                                        <TextBlock Grid.Column="9" Text="{Binding AvgSettle}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="4,0,12,0" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="4" x:Name="FooterText" Classes="secondary" Margin="0,8,0,0" Text="—" />
+    </Grid>
+</UserControl>

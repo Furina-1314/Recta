@@ -125,4 +125,10 @@ internal static partial class RectaNative
 
     [LibraryImport(Lib)]
     internal static partial int recta_list_inflows(int limit, byte[] buf, int cap);
+
+    [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int recta_get_audit_statistics(string actor_id, byte[] buf, int cap);
+
+    [LibraryImport(Lib)]
+    internal static partial int recta_get_budget_overview(byte[] buf, int cap);
 }

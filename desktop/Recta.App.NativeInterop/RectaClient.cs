@@ -214,6 +214,19 @@ public sealed class RectaClient
         return Deserialize<InflowList>(json).Inflows;
     }
 
+    /// <summary>团支书专属全员统计(§5.4)。非团支书将收到 Permission 错误码。</summary>
+    public AuditStatistics GetAuditStatistics(string actorId)
+    {
+        var json = CallString((buf, cap) => RectaNative.recta_get_audit_statistics(actorId, buf, cap));
+        return Deserialize<AuditStatistics>(json);
+    }
+
+    public BudgetOverview GetBudgetOverview()
+    {
+        var json = CallString((buf, cap) => RectaNative.recta_get_budget_overview(buf, cap));
+        return Deserialize<BudgetOverview>(json);
+    }
+
     // ---- 内部:返回码与缓冲 plumbing ----
 
     private static string CallString(Func<byte[], int, int> invoke)

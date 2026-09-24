@@ -150,3 +150,43 @@ public sealed record InflowDto(
 
 public sealed record InflowList(
     [property: JsonPropertyName("inflows")] IReadOnlyList<InflowDto> Inflows);
+
+public sealed record AuditOverall(
+    [property: JsonPropertyName("submitted")] long Submitted,
+    [property: JsonPropertyName("rejected")] long Rejected,
+    [property: JsonPropertyName("rejection_rate_pct")] double RejectionRatePct,
+    [property: JsonPropertyName("total_applied_cents")] long TotalAppliedCents,
+    [property: JsonPropertyName("total_approved_cents")] long TotalApprovedCents,
+    [property: JsonPropertyName("reduction_cents")] long ReductionCents,
+    [property: JsonPropertyName("avg_review_minutes")] double? AvgReviewMinutes,
+    [property: JsonPropertyName("avg_settle_minutes")] double? AvgSettleMinutes);
+
+public sealed record RejectionReason(
+    [property: JsonPropertyName("reason")] string Reason,
+    [property: JsonPropertyName("count")] long Count);
+
+public sealed record AuditMember(
+    [property: JsonPropertyName("applicant_id")] string ApplicantId,
+    [property: JsonPropertyName("display_name")] string DisplayName,
+    [property: JsonPropertyName("submitted")] long Submitted,
+    [property: JsonPropertyName("rejected")] long Rejected,
+    [property: JsonPropertyName("settled")] long Settled,
+    [property: JsonPropertyName("applied_cents")] long AppliedCents,
+    [property: JsonPropertyName("approved_cents")] long ApprovedCents,
+    [property: JsonPropertyName("settled_cents")] long SettledCents,
+    [property: JsonPropertyName("avg_review_minutes")] double? AvgReviewMinutes,
+    [property: JsonPropertyName("avg_settle_minutes")] double? AvgSettleMinutes,
+    [property: JsonPropertyName("channels")] Dictionary<string, long> Channels);
+
+public sealed record AuditStatistics(
+    [property: JsonPropertyName("overall")] AuditOverall Overall,
+    [property: JsonPropertyName("rejection_reasons")] IReadOnlyList<RejectionReason> RejectionReasons,
+    [property: JsonPropertyName("members")] IReadOnlyList<AuditMember> Members);
+
+public sealed record BudgetMonth(
+    [property: JsonPropertyName("month")] string Month,
+    [property: JsonPropertyName("settled_by_channel")] Dictionary<string, long> SettledByChannel,
+    [property: JsonPropertyName("inflow_cents")] long InflowCents);
+
+public sealed record BudgetOverview(
+    [property: JsonPropertyName("months")] IReadOnlyList<BudgetMonth> Months);

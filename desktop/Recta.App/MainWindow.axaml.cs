@@ -138,9 +138,9 @@ public partial class MainWindow : Window
         "faculty" => new FacultyPage(),
         "students" => new StudentsPage(),
         "inflow" => new InflowPage(),
+        "budget" => new BudgetPage(),
+        "audit" => new AuditPage(),
         "settings" => new SettingsPage(),
-        "budget" => new SkeletonPage("预算概览", "各渠道余额与月度动账走势(只读)。落地于 P11。", "\uE8EF"),
-        "audit" => new SkeletonPage("审计看板", "全员提单统计:驳回率、核减差额、响应时效(团支书专属)。落地于 P11。", "\uE81C"),
         _ => new SkeletonPage(tag, "", "\uE7BA"),
     };
 

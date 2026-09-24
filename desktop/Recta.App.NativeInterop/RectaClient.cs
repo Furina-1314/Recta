@@ -201,6 +201,19 @@ public sealed class RectaClient
         return Deserialize<ChangeEventBatch>(json);
     }
 
+    public IReadOnlyList<LedgerEntryDto> ListStudentLedger(string studentId, int limit = 100)
+    {
+        var json = CallString((buf, cap) =>
+            RectaNative.recta_list_student_ledger(studentId, limit, buf, cap));
+        return Deserialize<LedgerEntryList>(json).Entries;
+    }
+
+    public IReadOnlyList<InflowDto> ListInflows(int limit = 100)
+    {
+        var json = CallString((buf, cap) => RectaNative.recta_list_inflows(limit, buf, cap));
+        return Deserialize<InflowList>(json).Inflows;
+    }
+
     // ---- 内部:返回码与缓冲 plumbing ----
 
     private static string CallString(Func<byte[], int, int> invoke)

@@ -118,4 +118,11 @@ internal static partial class RectaNative
     [LibraryImport(Lib)]
     internal static partial int recta_fetch_change_events(long after_seq, int limit, byte[] buf,
                                                           int cap);
+
+    [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int recta_list_student_ledger(string student_id, int limit, byte[] buf,
+                                                          int cap);
+
+    [LibraryImport(Lib)]
+    internal static partial int recta_list_inflows(int limit, byte[] buf, int cap);
 }

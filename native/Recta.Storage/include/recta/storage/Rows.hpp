@@ -93,4 +93,30 @@ struct ChangeEventRow {
     std::optional<std::string> created_at;
 };
 
+// 流水读取行(写入走 LedgerEntry)。
+struct LedgerEntryRow {
+    int64_t id = 0;
+    std::optional<std::string> student_id;
+    std::optional<int> account_id;
+    std::optional<int> expense_request_id;
+    std::optional<int64_t> inflow_record_id;
+    std::string entry_type;
+    int64_t change_cents = 0;
+    int64_t balance_after_cents = 0;
+    std::optional<std::string> notes;
+    std::optional<std::string> created_at;
+};
+
+struct InflowRow {
+    int64_t id = 0;
+    int64_t amount_cents = 0;
+    std::string source_title;
+    std::string destination_type;
+    std::optional<std::string> target_student_id;
+    std::optional<int> related_request_id;
+    std::string operator_id;
+    std::optional<std::string> voucher_file_url;
+    std::optional<std::string> created_at;
+};
+
 } // namespace recta::storage

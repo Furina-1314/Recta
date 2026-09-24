@@ -102,6 +102,11 @@ RECTA_API int32_t recta_list_users(char* buf, int32_t cap /*不含口令哈希*/
 RECTA_API int32_t recta_get_overview(char* buf, int32_t cap);
 RECTA_API int32_t recta_fetch_change_events(int64_t after_seq, int32_t limit, char* buf,
                                             int32_t cap);
+/* 个人分户流水:{"entries":[...]}(最新在前)。 */
+RECTA_API int32_t recta_list_student_ledger(const char* student_id, int32_t limit, char* buf,
+                                            int32_t cap);
+/* 全渠道入账台账:{"inflows":[...]}(最新在前)。 */
+RECTA_API int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap);
 
 /* ---- 开发/测试专用(编译期 RECTA_DEV_TOOLS 门控;发布构建必须关闭该选项) ---- */
 #ifdef RECTA_DEV_TOOLS

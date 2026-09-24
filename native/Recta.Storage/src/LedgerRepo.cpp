@@ -64,4 +64,54 @@ std::vector<ChangeEventRow> LedgerRepo::FetchChangeEventsSince(pqxx::work& tx,
     return events;
 }
 
+std::vector<LedgerEntryRow> LedgerRepo::ListStudentLedger(pqxx::work& tx,
+                                                          const std::string& student_id, int limit) {
+    const auto result = tx.exec(
+        "SELECT id, student_id, account_id, expense_request_id, inflow_record_id, entry_type, "
+        "       change_cents, balance_after_cents, notes, created_at "
+        "FROM account_ledger_entries WHERE student_id = $1 ORDER BY id DESC LIMIT $2",
+        pqxx::params(student_id, limit));
+    std::vector<LedgerEntryRow> entries;
+    entries.reserve(static_cast<std::size_t>(result.size()));
+    for (const auto& row : result) {
+        LedgerEntryRow entry;
+        entry.id = row["id"].as<int64_t>();
+        entry.student_id = row["student_id"].as<std::optional<std::string>>();
+        entry.account_id = row["account_id"].as<std::optional<int>>();
+        entry.expense_request_id = row["expense_request_id"].as<std::optional<int>>();
+        entry.inflow_record_id = row["inflow_record_id"].as<std::optional<int64_t>>();
+        entry.entry_type = row["entry_type"].as<std::string>();
+        entry.change_cents = row["change_cents"].as<int64_t>();
+        entry.balance_after_cents = row["balance_after_cents"].as<int64_t>();
+        entry.notes = row["notes"].as<std::optional<std::string>>();
+        entry.created_at = row["created_at"].as<std::optional<std::string>>();
+        entries.push_back(std::move(entry));
+    }
+    return entries;
+}
+
+std::vector<InflowRow> LedgerRepo::ListInflows(pqxx::work& tx, int limit) {
+    const auto result = tx.exec(
+        "SELECT id, amount_cents, source_title, destination_type, target_student_id, "
+        "       related_request_id, operator_id, voucher_file_url, created_at "
+        "FROM inflow_records ORDER BY id DESC LIMIT $1",
+        pqxx::params(limit));
+    std::vector<InflowRow> inflows;
+    inflows.reserve(static_cast<std::size_t>(result.size()));
+    for (const auto& row : result) {
+        InflowRow inflow;
+        inflow.id = row["id"].as<int64_t>();
+        inflow.amount_cents = row["amount_cents"].as<int64_t>();
+        inflow.source_title = row["source_title"].as<std::string>();
+        inflow.destination_type = row["destination_type"].as<std::string>();
+        inflow.target_student_id = row["target_student_id"].as<std::optional<std::string>>();
+        inflow.related_request_id = row["related_request_id"].as<std::optional<int>>();
+        inflow.operator_id = row["operator_id"].as<std::string>();
+        inflow.voucher_file_url = row["voucher_file_url"].as<std::optional<std::string>>();
+        inflow.created_at = row["created_at"].as<std::optional<std::string>>();
+        inflows.push_back(std::move(inflow));
+    }
+    return inflows;
+}
+
 } // namespace recta::storage

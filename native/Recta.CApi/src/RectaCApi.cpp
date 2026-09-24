@@ -646,9 +646,63 @@ int32_t recta_fetch_change_events(int64_t after_seq, int32_t limit, char* buf, i
     });
 }
 
+int32_t recta_list_student_ledger(const char* student_id, int32_t limit, char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        RequireReady();
+        if (limit <= 0) limit = 100;
+        const auto entries = S().neon->ExecuteTransaction(
+            [&](pqxx::work& tx) {
+                return recta::storage::LedgerRepo::ListStudentLedger(tx, ReqStr(student_id), limit);
+            });
+        json array = json::array();
+        for (const auto& entry : entries) {
+            array.push_back(json{
+                {"id", entry.id},
+                {"expense_request_id", entry.expense_request_id.has_value()
+                                           ? json(*entry.expense_request_id)
+                                           : json(nullptr)},
+                {"inflow_record_id", entry.inflow_record_id.has_value()
+                                          ? json(*entry.inflow_record_id)
+                                          : json(nullptr)},
+                {"entry_type", entry.entry_type},
+                {"change_cents", entry.change_cents},
+                {"balance_after_cents", entry.balance_after_cents},
+                {"notes", OptJson(entry.notes)},
+                {"created_at", OptJson(entry.created_at)},
+            });
+        }
+        return json{{"entries", array}}.dump();
+    });
+}
+
+int32_t recta_list_inflows(int32_t limit, char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        RequireReady();
+        if (limit <= 0) limit = 100;
+        const auto inflows = S().neon->ExecuteTransaction(
+            [&](pqxx::work& tx) { return recta::storage::LedgerRepo::ListInflows(tx, limit); });
+        json array = json::array();
+        for (const auto& inflow : inflows) {
+            array.push_back(json{
+                {"id", inflow.id},
+                {"amount_cents", inflow.amount_cents},
+                {"source_title", inflow.source_title},
+                {"destination_type", inflow.destination_type},
+                {"target_student_id", OptJson(inflow.target_student_id)},
+                {"related_request_id", inflow.related_request_id.has_value()
+                                            ? json(*inflow.related_request_id)
+                                            : json(nullptr)},
+                {"operator_id", inflow.operator_id},
+                {"voucher_file_url", OptJson(inflow.voucher_file_url)},
+                {"created_at", OptJson(inflow.created_at)},
+            });
+        }
+        return json{{"inflows", array}}.dump();
+    });
+}
+
 #ifdef RECTA_DEV_TOOLS
-int32_t recta_dev_truncate_all(void) {
-    return Call([&] {
+int32_t recta_dev_truncate_all(void) {    return Call([&] {
         RequireReady();
         S().neon->ExecuteTransaction([](pqxx::work& tx) {
             tx.exec("TRUNCATE account_ledger_entries, inflow_records, expense_splits, "

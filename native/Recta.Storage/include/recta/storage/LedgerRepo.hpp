@@ -30,6 +30,14 @@ public:
     // 增量同步拉取:seq 严格递增(P12 客户端消费)。
     [[nodiscard]] static std::vector<ChangeEventRow> FetchChangeEventsSince(pqxx::work& tx,
                                                                             int64_t after_seq, int limit);
+
+    // 个人分户流水(最新在前)。
+    [[nodiscard]] static std::vector<LedgerEntryRow> ListStudentLedger(pqxx::work& tx,
+                                                                       const std::string& student_id,
+                                                                       int limit = 100);
+
+    // 全渠道入账台账(最新在前)。
+    [[nodiscard]] static std::vector<InflowRow> ListInflows(pqxx::work& tx, int limit = 100);
 };
 
 } // namespace recta::storage

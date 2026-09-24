@@ -123,3 +123,30 @@ public sealed record ChangeEventDto(
 public sealed record ChangeEventBatch(
     [property: JsonPropertyName("events")] IReadOnlyList<ChangeEventDto> Events,
     [property: JsonPropertyName("max_seq")] long MaxSeq);
+
+public sealed record LedgerEntryDto(
+    [property: JsonPropertyName("id")] long Id,
+    [property: JsonPropertyName("expense_request_id")] int? ExpenseRequestId,
+    [property: JsonPropertyName("inflow_record_id")] long? InflowRecordId,
+    [property: JsonPropertyName("entry_type")] string EntryType,
+    [property: JsonPropertyName("change_cents")] long ChangeCents,
+    [property: JsonPropertyName("balance_after_cents")] long BalanceAfterCents,
+    [property: JsonPropertyName("notes")] string? Notes,
+    [property: JsonPropertyName("created_at")] string? CreatedAt);
+
+public sealed record LedgerEntryList(
+    [property: JsonPropertyName("entries")] IReadOnlyList<LedgerEntryDto> Entries);
+
+public sealed record InflowDto(
+    [property: JsonPropertyName("id")] long Id,
+    [property: JsonPropertyName("amount_cents")] long AmountCents,
+    [property: JsonPropertyName("source_title")] string SourceTitle,
+    [property: JsonPropertyName("destination_type")] string DestinationType,
+    [property: JsonPropertyName("target_student_id")] string? TargetStudentId,
+    [property: JsonPropertyName("related_request_id")] int? RelatedRequestId,
+    [property: JsonPropertyName("operator_id")] string OperatorId,
+    [property: JsonPropertyName("voucher_file_url")] string? VoucherFileUrl,
+    [property: JsonPropertyName("created_at")] string? CreatedAt);
+
+public sealed record InflowList(
+    [property: JsonPropertyName("inflows")] IReadOnlyList<InflowDto> Inflows);

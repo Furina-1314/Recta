@@ -15,11 +15,26 @@ public static class AppServices
     public static bool SmokeMode =>
         Environment.GetEnvironmentVariable("RECTA_SMOKE") == "1";
 
+    // 冒烟模式下改连 recta-test 测试分支(演示数据),不影响生产。
+    public static bool SmokeUseTestDb =>
+        SmokeMode && Environment.GetEnvironmentVariable("RECTA_SMOKE_TESTDB") == "1";
+
+    // 冒烟模式下启动后直达的导航页(如 requests/audit)。
+    public static string? SmokePage =>
+        SmokeMode ? Environment.GetEnvironmentVariable("RECTA_SMOKE_PAGE") : null;
+
     public static void InitNative()
     {
         try
         {
-            Client.Init(null); // 原生侧按 DATABASE_URL / .env.local 装载
+            if (SmokeUseTestDb)
+            {
+                Client.InitTest();
+            }
+            else
+            {
+                Client.Init(null); // 原生侧按 DATABASE_URL / .env.local 装载
+            }
             NativeReady = true;
         }
         catch (RectaException)

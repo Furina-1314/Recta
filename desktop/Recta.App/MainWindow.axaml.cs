@@ -37,7 +37,21 @@ public partial class MainWindow : Window
         UserNameText.Text = session?.DisplayName ?? "演示模式";
         UserRoleText.Text = session is null ? "SMOKE" : RoleLabel(session.Role);
 
-        Nav.SelectedIndex = 0;
+        // 冒烟模式支持直达指定页(RECTA_SMOKE_PAGE=requests 等)。
+        var smokePage = AppServices.SmokePage;
+        var initialIndex = 0;
+        if (smokePage is not null)
+        {
+            for (var i = 0; i < _navItems.Count; i++)
+            {
+                if (_navItems[i].Tag == smokePage)
+                {
+                    initialIndex = i;
+                    break;
+                }
+            }
+        }
+        Nav.SelectedIndex = initialIndex;
 
         if (AppServices.SmokeMode)
         {
@@ -119,8 +133,8 @@ public partial class MainWindow : Window
     private UserControl CreatePage(string tag) => tag switch
     {
         "overview" => new OverviewPage(),
+        "requests" => new RequestsPage(),
         "settings" => new SettingsPage(),
-        "requests" => new SkeletonPage("动账审批台账", "两栏 Master-Detail:高密度台账 + 右侧 Inspector 审查与办结(含核减、驳回、垫资披露)。落地于 P8。", "\uE8A5"),
         "students" => new SkeletonPage("班费独立分户", "每人独立虚拟子账户、余额与流水,允许透支为负(生委垫资)。落地于 P10。", "\uE716"),
         "flexible" => new SkeletonPage("灵活走账公款", "班级灵活公款的走账提单与增资,团支书存管。落地于 P9。", "\uE8C7"),
         "faculty" => new SkeletonPage("系级报销暂挂", "班委垫付挂账、系财务打款核销,生活委员存管。落地于 P9。", "\uE8F1"),

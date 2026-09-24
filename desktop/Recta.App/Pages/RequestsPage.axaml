@@ -1,0 +1,217 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Pages"
+             x:Class="Recta.App.Pages.RequestsPage">
+
+    <Grid ColumnDefinitions="*,8,376">
+
+        <!-- ================= 左·台账主视图 ================= -->
+        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="28,24,12,16">
+
+            <StackPanel Spacing="2">
+                <TextBlock Classes="page-title" Text="审批" Margin="0" />
+                <TextBlock Classes="secondary" Text="动账审批台账 —— 两阶段流转：审批不动账，办结才扣账" />
+            </StackPanel>
+
+            <!-- 筛选与搜索 -->
+            <Grid Grid.Row="1" Margin="0,12,4,12" ColumnDefinitions="Auto,8,Auto,8,*,8">
+                <ComboBox x:Name="StatusFilter" MinWidth="116" SelectionChanged="OnFilterChanged"
+                          AutomationProperties.Name="状态筛选">
+                    <ComboBoxItem Content="全部状态" Tag="" />
+                    <ComboBoxItem Content="待审理" Tag="PENDING_REVIEW" />
+                    <ComboBoxItem Content="待办结" Tag="APPROVED" />
+                    <ComboBoxItem Content="已办结" Tag="SETTLED" />
+                    <ComboBoxItem Content="已驳回" Tag="REJECTED" />
+                </ComboBox>
+                <ComboBox Grid.Column="2" x:Name="CategoryFilter" MinWidth="116"
+                          SelectionChanged="OnFilterChanged" AutomationProperties.Name="渠道筛选">
+                    <ComboBoxItem Content="全部渠道" Tag="" />
+                    <ComboBoxItem Content="灵活公款" Tag="FLEXIBLE" />
+                    <ComboBoxItem Content="系里报销" Tag="FACULTY" />
+                    <ComboBoxItem Content="班费平摊" Tag="CLASS_FUND" />
+                </ComboBox>
+                <TextBox Grid.Column="4" x:Name="SearchBox" Watermark="搜索动账事项或编号…"
+                         TextChanged="OnSearchChanged" />
+            </Grid>
+
+            <!-- 高密度表格:1px 硬线网格,金额等宽右对齐 -->
+            <Border Grid.Row="2" Classes="card" Padding="0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Background="{DynamicResource RectaPaneBrush}"
+                            BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="76,*,112,132,92">
+                            <Grid.Styles>
+                                <Style Selector="TextBlock">
+                                    <Setter Property="FontSize" Value="12" />
+                                    <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                                </Style>
+                            </Grid.Styles>
+                            <TextBlock Text="编号" Margin="14,8,8,8" />
+                            <TextBlock Grid.Column="1" Text="动账事项" Margin="8,8,8,8" />
+                            <TextBlock Grid.Column="2" Text="出资渠道" Margin="8,8,8,8" />
+                            <TextBlock Grid.Column="3" Text="金额(元)" Classes="money" Margin="8,8,14,8" />
+                            <TextBlock Grid.Column="4" Text="状态" Margin="8,8,14,8" />
+                        </Grid>
+                    </Border>
+
+                    <ScrollViewer Grid.Row="1">
+                        <ListBox x:Name="Rows" Background="Transparent" Padding="0"
+                                 SelectionMode="Single" SelectionChanged="OnRowSelected">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="6,0,0,0" />
+                                    <Setter Property="MinHeight" Value="44" />
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:RequestRow">
+                                    <Grid ColumnDefinitions="70,*,112,132,92" MinHeight="44">
+                                        <TextBlock Text="{Binding IdText}" VerticalAlignment="Center"
+                                                   FontSize="13" Margin="8,0,0,0" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center"
+                                                   FontSize="14" TextTrimming="CharacterEllipsis" Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding CategoryLabel}"
+                                                   VerticalAlignment="Center" FontSize="13" Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding AmountText}" Classes="money"
+                                                   VerticalAlignment="Center" Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="4" Text="{Binding StatusLabel}" FontSize="13"
+                                                   Foreground="{Binding StatusBrush}" VerticalAlignment="Center"
+                                                   Margin="2,0,8,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+
+                    <TextBlock x:Name="EmptyHint" Grid.Row="1" IsVisible="False"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Classes="secondary" Text="暂无符合条件的单据" />
+                </Grid>
+            </Border>
+
+            <!-- 页内底栏(§3:N 项记录 | 待办 X 项) -->
+            <Border Grid.Row="3" Margin="0,8,4,0" Padding="12,7"
+                    Background="{DynamicResource RectaPaneBrush}"
+                    BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="1">
+                <TextBlock x:Name="PageSummary" Classes="secondary" Text="—" />
+            </Border>
+        </Grid>
+
+        <!-- ================= 右·Inspector 审查与办结 ================= -->
+        <Border Grid.Column="2" Classes="card" Padding="0" Margin="4,24,28,16" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+                <Border Padding="20,14" BorderBrush="{DynamicResource RectaDividerBrush}"
+                        BorderThickness="0,0,0,1" Background="{DynamicResource RectaPaneBrush}">
+                    <TextBlock Text="动账审查与办结" FontWeight="SemiBold" />
+                </Border>
+
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel Margin="20,14" Spacing="12">
+
+                        <!-- 未选中态 -->
+                        <StackPanel x:Name="EmptyPanel" Spacing="8" IsVisible="True">
+                            <TextBlock Classes="secondary" Text="在左侧台账选择单据，即可在此审查、审批或办结。" TextWrapping="Wrap" />
+                        </StackPanel>
+
+                        <!-- 详情 -->
+                        <StackPanel x:Name="DetailPanel" Spacing="10" IsVisible="False">
+                            <TextBlock x:Name="ReqNoText" FontWeight="SemiBold" FontSize="16" />
+                            <TextBlock x:Name="ReqTitleText" FontSize="15" TextWrapping="Wrap" />
+
+                            <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
+                                <StackPanel Spacing="6">
+                                    <TextBlock Classes="secondary" Text="提单人" FontSize="12" />
+                                    <TextBlock x:Name="ApplicantText" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" Spacing="6">
+                                    <TextBlock Classes="secondary" Text="状态" FontSize="12" />
+                                    <TextBlock x:Name="StatusText" FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Grid>
+
+                            <Border Height="1" Background="{DynamicResource RectaDividerBrush}" Margin="0,2" />
+
+                            <!-- 金额三态(§6:申报/核准/出账严格解耦) -->
+                            <Grid ColumnDefinitions="*,Auto" Margin="0,2,0,0">
+                                <TextBlock Classes="secondary" Text="申报金额(元)" />
+                                <TextBlock x:Name="AppliedText" Classes="money" FontWeight="SemiBold" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="secondary" Text="核准金额(元)" />
+                                <TextBlock x:Name="ApprovedText" Classes="money" />
+                            </Grid>
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock Classes="secondary" Text="实际出账(元)" />
+                                <TextBlock x:Name="SettledText" Classes="money" />
+                            </Grid>
+
+                            <TextBlock x:Name="ReviewNotesLabel" Classes="secondary" FontSize="12"
+                                       Text="审批意见" IsVisible="False" />
+                            <TextBlock x:Name="ReviewNotesText" TextWrapping="Wrap" IsVisible="False" />
+
+                            <TextBlock x:Name="SettleNotesLabel" Classes="secondary" FontSize="12"
+                                       Text="办结批复(含垫资披露)" IsVisible="False" />
+                            <TextBlock x:Name="SettleNotesText" TextWrapping="Wrap" IsVisible="False" />
+                        </StackPanel>
+
+                        <!-- 平摊名单 -->
+                        <StackPanel x:Name="SplitsPanel" Spacing="6" IsVisible="False">
+                            <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                            <TextBlock x:Name="SplitsHeaderText" FontWeight="SemiBold" />
+                            <ItemsControl x:Name="SplitsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:SplitLineVm">
+                                        <Grid ColumnDefinitions="*,Auto" Margin="0,3">
+                                            <TextBlock FontSize="13">
+                                                <Run Text="• " /><Run Text="{Binding Display}" />
+                                            </TextBlock>
+                                            <TextBlock Grid.Column="1" Classes="money" FontSize="13"
+                                                       Text="{Binding AmountText}" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+
+                        <!-- 审批操作(PENDING_REVIEW 且有权限) -->
+                        <StackPanel x:Name="ReviewPanel" Spacing="10" IsVisible="False">
+                            <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                            <TextBlock Text="审批" FontWeight="SemiBold" />
+                            <TextBlock Classes="secondary" FontSize="12"
+                                       Text="核准金额(元)——小于申报即为核减,须填核减理由" />
+                            <TextBox x:Name="ApproveAmountBox" Classes="money" TextAlignment="Right" />
+                            <TextBox x:Name="ReviewNotesBox" MinHeight="64" TextWrapping="Wrap"
+                                     Watermark="核减理由 / 审批意见(核减必填,驳回必填)" AcceptsReturn="True" />
+                            <Grid ColumnDefinitions="*,12,*">
+                                <Button Classes="danger" Content="驳回" Click="OnReject" />
+                                <Button Grid.Column="2" Classes="accent" Content="核准出账" Click="OnApprove" />
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- 办结操作(APPROVED 且有权限) -->
+                        <StackPanel x:Name="SettlePanel" Spacing="10" IsVisible="False">
+                            <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                            <TextBlock Text="办结" FontWeight="SemiBold" />
+                            <TextBox x:Name="SettleNotesBox" MinHeight="56" TextWrapping="Wrap"
+                                     Watermark="办结附加说明(可选;系统将自动追加垫资批复)" AcceptsReturn="True" />
+                            <Button Classes="accent" HorizontalAlignment="Stretch" Content="确认办结扣款"
+                                    Click="OnSettle" />
+                        </StackPanel>
+
+                        <!-- 办结结果披露 -->
+                        <StackPanel x:Name="ResultPanel" Spacing="6" IsVisible="False">
+                            <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                            <TextBlock Text="本次办结垫资披露" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource RectaDangerBrush}" />
+                            <TextBlock x:Name="ResultText" TextWrapping="Wrap" FontSize="13" />
+                        </StackPanel>
+
+                        <TextBlock x:Name="InspectorError" Classes="danger-text" TextWrapping="Wrap"
+                                   IsVisible="False" />
+
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

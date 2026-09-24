@@ -1,0 +1,14 @@
+* text=auto
+*.cpp text
+*.hpp text
+*.md text
+*.json text
+*.xaml text
+*.cs text
+*.csproj text
+*.slnx text
+*.cmake text
+*.png binary
+*.ico binary
+*.ttf binary
+*.pfx binary

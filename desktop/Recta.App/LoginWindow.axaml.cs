@@ -11,6 +11,93 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
+        Loaded += async (_, _) => await DetectFirstRunAsync();
+        if (AppServices.SmokeMode && Environment.GetEnvironmentVariable("RECTA_SMOKE_LOGIN") == "1")
+        {
+            // 冒烟:截图登录窗后自动退出(验证登录/引导面板渲染)。
+            Loaded += async (_, _) =>
+            {
+                await Task.Delay(2600);
+                await CaptureSmokeAsync();
+                Close();
+            };
+        }
+    }
+
+    // users 空表 → 显示一次性首任团支书引导(否则空系统无人可登录)。
+    private async Task DetectFirstRunAsync()
+    {
+        if (!AppServices.NativeReady)
+        {
+            return;
+        }
+        try
+        {
+            var users = await Task.Run(() => AppServices.Client.ListUsers());
+            if (users.Count == 0)
+            {
+                LoginPanel.IsVisible = false;
+                BootstrapPanel.IsVisible = true;
+            }
+        }
+        catch (RectaException)
+        {
+            // 检测失败按普通登录处理,错误会在登录时呈现。
+        }
+    }
+
+    private async void OnBootstrap(object? sender, RoutedEventArgs e)
+    {
+        ErrorText.IsVisible = false;
+        var username = (BootstrapUsernameBox.Text ?? "").Trim();
+        var name = (BootstrapNameBox.Text ?? "").Trim();
+        if (username.Length == 0 || name.Length == 0)
+        {
+            ShowError("用户名与姓名必填。");
+            return;
+        }
+
+        try
+        {
+            var tempPassword = await Task.Run(() =>
+                AppServices.Client.BootstrapSecretary(username, name));
+            TempPasswordBox.Text = tempPassword;
+            TempPasswordBox.IsVisible = true;
+            BootstrapDoneButton.IsVisible = true;
+        }
+        catch (RectaException ex)
+        {
+            ShowError(ex.Message);
+        }
+    }
+
+    private void OnBootstrapDone(object? sender, RoutedEventArgs e)
+    {
+        BootstrapPanel.IsVisible = false;
+        LoginPanel.IsVisible = true;
+        UsernameBox.Text = (BootstrapUsernameBox.Text ?? "").Trim();
+        PasswordBox.Text = string.Empty;
+        ErrorText.IsVisible = false;
+    }
+
+    private async Task CaptureSmokeAsync()
+    {
+        try
+        {
+            var outDir = Environment.GetEnvironmentVariable("RECTA_SMOKE_OUT")
+                         ?? Path.Combine(AppContext.BaseDirectory, "smoke");
+            Directory.CreateDirectory(outDir);
+            var scale = VisualRoot is Avalonia.Rendering.IRenderRoot root ? root.RenderScaling : 1.0;
+            var size = new Avalonia.PixelSize((int)(Bounds.Width * scale), (int)(Bounds.Height * scale));
+            using var bitmap = new Avalonia.Media.Imaging.RenderTargetBitmap(size,
+                new Avalonia.Vector(96 * scale, 96 * scale));
+            bitmap.Render(this);
+            bitmap.Save(Path.Combine(outDir, "smoke-login.png"));
+        }
+        catch
+        {
+            // 截图失败不阻断退出
+        }
     }
 
     private void ShowError(string message)

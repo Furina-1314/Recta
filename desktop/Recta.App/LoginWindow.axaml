@@ -27,6 +27,27 @@
                         HorizontalAlignment="Stretch" Margin="0,10,0,0" />
             </StackPanel>
 
+            <!-- 首次引导:users 空表时开立首任团支书(仅一次) -->
+            <StackPanel x:Name="BootstrapPanel" Spacing="12" IsVisible="False">
+                <Border Classes="card" BorderBrush="{DynamicResource RectaAccentBrush}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="系统未初始化" FontWeight="SemiBold" />
+                        <TextBlock Text="检测到尚无任何账号。请开立首任团支书(固定 id u_sec_01);此引导仅在空系统时可用一次,其后账号均由团支书开立。"
+                                   Classes="secondary" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="团支书登录用户名" />
+                <TextBox x:Name="BootstrapUsernameBox" Watermark="如:secretary" />
+                <TextBlock Text="姓名" Margin="0,6,0,0" />
+                <TextBox x:Name="BootstrapNameBox" Watermark="如:李明" />
+                <Button Classes="accent" Content="开立账号并生成临时口令" Click="OnBootstrap"
+                        HorizontalAlignment="Stretch" Margin="0,10,0,0" />
+                <TextBox x:Name="TempPasswordBox" IsReadOnly="True" IsVisible="False"
+                         FontFamily="Cascadia Mono,Consolas" FontWeight="SemiBold" />
+                <Button x:Name="BootstrapDoneButton" IsVisible="False" Content="我已抄录,去登录"
+                        Click="OnBootstrapDone" HorizontalAlignment="Stretch" />
+            </StackPanel>
+
             <!-- 首登强制改密面板(§5.1:初次登录强制改密) -->
             <StackPanel x:Name="ChangePanel" Spacing="12" IsVisible="False">
                 <Border Classes="card" BorderBrush="{DynamicResource RectaAccentBrush}">

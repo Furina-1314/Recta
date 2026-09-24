@@ -32,7 +32,6 @@ public sealed class StudentOption : INotifyPropertyChanged
 public partial class NewRequestPanel : UserControl
 {
     private readonly ObservableCollection<StudentOption> _students = [];
-    private bool _suppressEvents;
 
     /// <summary>提交成功后触发(宿主页面可借机刷新列表)。</summary>
     public event EventHandler<int>? RequestSubmitted;
@@ -104,10 +103,6 @@ public partial class NewRequestPanel : UserControl
 
     private void OnChannelChanged(object? sender, SelectionChangedEventArgs e)
     {
-        if (_suppressEvents)
-        {
-            return;
-        }
         var isClassFund = SelectedChannel == "CLASS_FUND";
         SplitSection.IsVisible = isClassFund;
         UpdatePreview();

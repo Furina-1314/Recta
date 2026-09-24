@@ -43,9 +43,18 @@ public partial class App : Application
                 var uid = Environment.GetEnvironmentVariable("RECTA_SMOKE_UID") ?? "u_sec_01";
                 AppServices.SetSession(new LoginSession(uid, "smoke", name, role, false));
 
-                var main = new MainWindow();
-                main.Show();
-                desktop.MainWindow = main;
+                if (Environment.GetEnvironmentVariable("RECTA_SMOKE_LOGIN") == "1")
+                {
+                    var loginWindow = new LoginWindow();
+                    loginWindow.Show();
+                    desktop.MainWindow = loginWindow;
+                }
+                else
+                {
+                    var main = new MainWindow();
+                    main.Show();
+                    desktop.MainWindow = main;
+                }
             }
             else
             {

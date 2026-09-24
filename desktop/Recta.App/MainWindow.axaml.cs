@@ -194,7 +194,7 @@ public partial class MainWindow : Window
         try
         {
             var overview = await Task.Run(() => AppServices.Client.GetOverview());
-            if (overview.Custody.Conserved && DbText.Text.StartsWith("连接正常"))
+            if (overview.Custody.Conserved && DbText.Text is { } dbText && dbText.StartsWith("连接正常"))
             {
                 DbText.Text = "连接正常 · 实时监听 · 对账守恒";
             }

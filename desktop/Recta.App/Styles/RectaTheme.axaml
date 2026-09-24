@@ -45,7 +45,9 @@
         <Setter Property="FontWeight" Value="SemiBold" />
     </Style>
 
-    <!-- 导航/列表项:自绘方角模板——选中态实心强调色,不依赖 Fluent 半透明选中层 -->
+    <!-- 导航/列表项:自绘方角模板——选中态实心强调色,不依赖 Fluent 半透明选中层。
+         注意:ContentPresenter 必须避开 PART_ContentPresenter 命名——Fluent 的
+         :selected/:focus 样式按该名匹配,会把 OS 强调色(可能非蓝)刷进内容区。 -->
     <Style Selector="ListBoxItem">
         <Setter Property="Foreground" Value="{DynamicResource RectaTextPrimaryBrush}" />
         <Setter Property="Padding" Value="14,9" />
@@ -54,7 +56,7 @@
             <ControlTemplate>
                 <Panel>
                     <Border x:Name="SelectionSurface" />
-                    <ContentPresenter x:Name="PART_ContentPresenter"
+                    <ContentPresenter x:Name="ContentHost"
                                       Content="{TemplateBinding Content}"
                                       ContentTemplate="{TemplateBinding ContentTemplate}"
                                       Margin="{TemplateBinding Padding}"

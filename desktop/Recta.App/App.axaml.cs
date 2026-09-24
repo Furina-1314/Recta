@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
 using Recta.App.NativeInterop;
 
 namespace Recta.App;
@@ -10,6 +11,21 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        PinSystemAccentColors();
+    }
+
+    // FluentTheme 会采纳 Windows 系统强调色(用户配色可能非蓝)。
+    // 在 App.Resources 顶层以代码钉死全系列为 Recta 7 级蓝色阶——
+    // 优先级高于任何主题字典写入,彻底杜绝 OS 配色渗入(Vibe.md §3:强调色固定 #0078D7)。
+    private void PinSystemAccentColors()
+    {
+        Resources["SystemAccentColor"] = Color.Parse("#0078D7");
+        Resources["SystemAccentColorDark1"] = Color.Parse("#0067B7");
+        Resources["SystemAccentColorDark2"] = Color.Parse("#005598");
+        Resources["SystemAccentColorDark3"] = Color.Parse("#00437A");
+        Resources["SystemAccentColorLight1"] = Color.Parse("#1A8BE1");
+        Resources["SystemAccentColorLight2"] = Color.Parse("#4DA3E8");
+        Resources["SystemAccentColorLight3"] = Color.Parse("#8FC7F1");
     }
 
     public override void OnFrameworkInitializationCompleted()

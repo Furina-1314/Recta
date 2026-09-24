@@ -55,4 +55,14 @@
     <FontFamily x:Key="RectaIconFont">Segoe MDL2 Assets</FontFamily>
     <Thickness x:Key="RectaCardPadding">16</Thickness>
 
+    <!-- 钉死 Fluent 主题强调色系:FluentTheme 会采纳 Windows 系统强调色(用户可能非蓝),
+         全系覆盖为本主题 7 级色阶,杜绝 OS 配色渗入(App.axaml.cs 中再以代码兜底)。 -->
+    <Color x:Key="SystemAccentColor">#0078D7</Color>
+    <Color x:Key="SystemAccentColorDark1">#0067B7</Color>
+    <Color x:Key="SystemAccentColorDark2">#005598</Color>
+    <Color x:Key="SystemAccentColorDark3">#00437A</Color>
+    <Color x:Key="SystemAccentColorLight1">#1A8BE1</Color>
+    <Color x:Key="SystemAccentColorLight2">#4DA3E8</Color>
+    <Color x:Key="SystemAccentColorLight3">#8FC7F1</Color>
+
 </ResourceDictionary>

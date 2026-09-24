@@ -112,6 +112,16 @@ RECTA_API int32_t recta_get_audit_statistics(const char* actor_id, char* buf, in
 /* 预算只读概览:近月出账(按渠道)与入账走势。 */
 RECTA_API int32_t recta_get_budget_overview(char* buf, int32_t cap);
 
+/* ---- 增量同步(§2 双轨:全局序列增量拉取 + LISTEN/NOTIFY 轻通知) ----
+   start:游标对齐当前 MAX(seq),仅上报此后新事件;后台线程持非池化监听连接
+   (自动从连接串派生——pooler 不支持 LISTEN),通知即拉、每 ~15s 兜底拉,
+   断线按 1s×n(封顶 15s)退避重连,重连后立即补齐收敛。 */
+RECTA_API int32_t recta_sync_start(void);
+RECTA_API void recta_sync_stop(void);
+RECTA_API int32_t recta_sync_status(char* buf, int32_t cap);
+/* 取走并清空已排队事件:{"events":[...],"count":n,"cursor":N}。 */
+RECTA_API int32_t recta_sync_drain(char* buf, int32_t cap);
+
 /* ---- 开发/测试专用(编译期 RECTA_DEV_TOOLS 门控;发布构建必须关闭该选项) ---- */
 #ifdef RECTA_DEV_TOOLS
 /* 清空全部业务表(测试分支复位)。 */

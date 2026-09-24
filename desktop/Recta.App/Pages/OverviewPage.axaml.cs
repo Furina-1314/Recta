@@ -6,7 +6,7 @@ using Recta.App.NativeInterop;
 
 namespace Recta.App.Pages;
 
-public partial class OverviewPage : UserControl
+public partial class OverviewPage : UserControl, IRefreshable
 {
     public OverviewPage()
     {
@@ -15,6 +15,8 @@ public partial class OverviewPage : UserControl
     }
 
     private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

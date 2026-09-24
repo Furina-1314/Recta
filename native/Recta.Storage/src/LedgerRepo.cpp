@@ -41,6 +41,8 @@ void LedgerRepo::AppendChangeEvent(pqxx::work& tx, const std::string& entity_typ
         "INSERT INTO change_events (entity_type, entity_id, event_type, payload) "
         "VALUES ($1, $2, $3, $4::jsonb)",
         pqxx::params(entity_type, entity_id, event_type, payload_json));
+    // 轻通知(Signal Push):随事务提交原子生效——监听端只会看到已提交的变更。
+    tx.exec("NOTIFY recta_changes");
 }
 
 std::vector<ChangeEventRow> LedgerRepo::FetchChangeEventsSince(pqxx::work& tx,

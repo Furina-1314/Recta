@@ -19,12 +19,16 @@
 #include <pqxx/pqxx>
 
 #include <algorithm>
+#include <atomic>
+#include <chrono>
 #include <cstring>
+#include <deque>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <thread>
 #include <utility>
 #include <vector>
 
@@ -844,6 +848,196 @@ int32_t recta_get_budget_overview(char* buf, int32_t cap) {
 
             return json{{"months", months}}.dump();
         });
+    });
+}
+
+// ---- 增量同步:双轨(全局序列增量拉取 + LISTEN/NOTIFY 轻通知) ----
+
+namespace {
+
+struct SyncState {
+    std::thread worker;
+    std::atomic<bool> running{false};
+    std::mutex mutex; // 仅保护 pending/cursor/状态字段(worker 为唯一写者)
+    std::deque<json> pending;
+    int64_t cursor = 0;
+    bool listening = false;
+    int reconnect_attempts = 0;
+    std::string listen_conn_str;
+    std::string pull_conn_str;
+};
+
+SyncState& SyncS() {
+    static SyncState state;
+    return state;
+}
+
+json ChangeEventToJson(const recta::storage::ChangeEventRow& event) {
+    return json{
+        {"seq", event.seq},
+        {"entity_type", event.entity_type},
+        {"entity_id", event.entity_id},
+        {"event_type", event.event_type},
+        {"payload", event.payload},
+    };
+}
+
+// 监听连接必须绕开 PgBouncer:优先环境变量,否则剥去主机名中的 "-pooler"。
+std::string DeriveUnpooledConnectionString(const std::string& pooled) {
+#if defined(_MSC_VER)
+#pragma warning(push)
+#pragma warning(disable : 4996) // getenv:仅读连接配置来源
+#endif
+    if (const char* env = std::getenv("RECTA_DB_UNPOOLED_URL"); env != nullptr && *env != '\0') {
+        return env;
+    }
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
+    std::string unpooled = pooled;
+    const auto pos = unpooled.find("-pooler");
+    if (pos != std::string::npos) {
+        unpooled.erase(pos, std::strlen("-pooler"));
+    }
+    return unpooled;
+}
+
+void SyncPullSince() {
+    auto& s = SyncS();
+    recta::storage::NeonContext neon(s.pull_conn_str);
+    auto events = neon.ExecuteTransaction([&](pqxx::work& tx) {
+        return recta::storage::LedgerRepo::FetchChangeEventsSince(tx, s.cursor, 200);
+    });
+    const std::lock_guard<std::mutex> lock(s.mutex);
+    for (auto& event : events) {
+        s.pending.push_back(ChangeEventToJson(event));
+        s.cursor = std::max(s.cursor, event.seq);
+    }
+    while (s.pending.size() > 500) {
+        s.pending.pop_front();
+    }
+}
+
+void SyncWorkerLoop() {
+    auto& s = SyncS();
+    constexpr int kTicksPerFallbackPull = 15; // ~15s 兜底拉取(await 1s/次)
+    int idle_ticks = 0;
+    std::unique_ptr<pqxx::connection> listener;
+
+    while (s.running.load()) {
+        try {
+            if (listener == nullptr) {
+                listener = std::make_unique<pqxx::connection>(s.listen_conn_str);
+                pqxx::work setup(*listener);
+                setup.exec("LISTEN recta_changes");
+                setup.commit();
+                {
+                    const std::lock_guard<std::mutex> lock(s.mutex);
+                    s.listening = true;
+                    s.reconnect_attempts = 0;
+                }
+                SyncPullSince(); // (重)连接后立即补齐,保证收敛一致
+            }
+
+            const int received = listener->await_notification(1, 0);
+            if (received > 0 || ++idle_ticks >= kTicksPerFallbackPull) {
+                idle_ticks = 0;
+                SyncPullSince();
+            }
+        } catch (const std::exception&) {
+            // 断线/瞬断:退避 1s×n 封顶 15s 后重建监听并全量补拉。
+            listener.reset();
+            int attempts;
+            {
+                const std::lock_guard<std::mutex> lock(s.mutex);
+                s.listening = false;
+                attempts = ++s.reconnect_attempts;
+            }
+            const auto backoff = std::chrono::milliseconds(std::min(1000 * attempts, 15000));
+            for (auto slept = std::chrono::milliseconds(0);
+                 s.running.load() && slept < backoff;
+                 slept += std::chrono::milliseconds(100)) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(100));
+            }
+        }
+    }
+    {
+        const std::lock_guard<std::mutex> lock(s.mutex);
+        s.listening = false;
+    }
+}
+
+} // namespace
+
+int32_t recta_sync_start(void) {
+    return Call([&] {
+        RequireReady();
+        auto& s = SyncS();
+        if (s.running.exchange(true)) {
+            return; // 已在运行
+        }
+
+        s.pull_conn_str = S().neon->connection_string();
+        s.listen_conn_str = DeriveUnpooledConnectionString(s.pull_conn_str);
+
+        // 游标对齐当前水位:只上报 start 之后的新事件。
+        recta::storage::NeonContext neon(s.pull_conn_str);
+        s.cursor = neon.ExecuteTransaction([](pqxx::work& tx) {
+            return tx.exec("SELECT COALESCE(MAX(seq), 0) FROM change_events")
+                .front()[0]
+                .as<int64_t>();
+        });
+        {
+            const std::lock_guard<std::mutex> lock(s.mutex);
+            s.pending.clear();
+            s.listening = false;
+            s.reconnect_attempts = 0;
+        }
+        s.worker = std::thread(SyncWorkerLoop);
+    });
+}
+
+void recta_sync_stop(void) {
+    auto& s = SyncS();
+    if (!s.running.exchange(false)) {
+        return;
+    }
+    if (s.worker.joinable()) {
+        s.worker.join(); // await 1s 粒度,至多 ~1s 内退出
+    }
+    const std::lock_guard<std::mutex> lock(s.mutex);
+    s.pending.clear();
+}
+
+int32_t recta_sync_status(char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        auto& s = SyncS();
+        const std::lock_guard<std::mutex> lock(s.mutex);
+        return json{
+            {"running", s.running.load()},
+            {"listening", s.listening},
+            {"reconnect_attempts", s.reconnect_attempts},
+            {"cursor", s.cursor},
+            {"pending", s.pending.size()},
+        }.dump();
+    });
+}
+
+int32_t recta_sync_drain(char* buf, int32_t cap) {
+    return JsonCall(buf, cap, [&] {
+        auto& s = SyncS();
+        std::deque<json> drained;
+        int64_t cursor;
+        {
+            const std::lock_guard<std::mutex> lock(s.mutex);
+            drained.swap(s.pending);
+            cursor = s.cursor;
+        }
+        json events = json::array();
+        for (auto& event : drained) {
+            events.push_back(std::move(event));
+        }
+        return json{{"events", events}, {"count", events.size()}, {"cursor", cursor}}.dump();
     });
 }
 

@@ -3,7 +3,7 @@
 本档是 [Vibe.md](Vibe.md) 的执行进度与工程决策记录。规范以 Vibe.md 为唯一真理基准；本档记录"做到哪了、怎么落的"。
 
 - **最后更新**：2026-09-24
-- **当前阶段**：P11 完成，下一步 P12（增量同步与连接状态）
+- **当前阶段**：P12 完成，下一步 P13（打包与收尾）
 - **仓库**：https://github.com/Furina-1314/Recta
 
 ---
@@ -77,7 +77,7 @@
 | **P9** | 提单与走账页：新提单（渠道选择、班费平摊名单+尾差承担人+预览）、灵活公款走账、系报销挂账 | ✅ 完成 | 提单→审批→办结全链路 GUI 可走 |
 | **P10** | 分户与入账页：同学名单管理（团支书）、充值补缴入账、个人流水、垫资披露视图 | ✅ 完成 | 入账三通道 GUI 可走 |
 | **P11** | 大盘/审计/预算看板：团支书全员统计（驳回率、核减差、响应时效、渠道分布） | ✅ 完成 | 数据与真库一致 |
-| **P12** | 增量同步与连接状态：`global_change_seq` 增量拉取 + Signal Push 轻通知、状态栏（连接正常/重试中）、断线退避重连 | ⬜ 未开始 | 断网恢复后数据收敛一致 |
+| **P12** | 增量同步与连接状态：`global_change_seq` 增量拉取 + Signal Push 轻通知、状态栏（连接正常/重试中）、断线退避重连 | ✅ 完成 | 断网恢复后数据收敛一致（xunit 真库 NOTIFY 收敛测试） |
 | **P13** | 打包收尾：发布配置、README 截图与构建说明、版本 tag | ⬜ 未开始 | 可交付 |
 
 注：导航含"预算"页，但 Vibe.md 未给预算模块规格——P11 中实现为只读概览（各渠道余额+月度动账走势），不引入写入路径；若后续补充规格再扩展。
@@ -109,6 +109,7 @@ Recta/
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
 - **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。
 - **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），逐表核验列名与类型（金额列均为 `BIGINT`）。DDL 同步落盘 `db/schema/001_init.sql` 供复现。账号种子数据（users / 两实体账户）延至 P4 身份认证阶段一并处理。
+- **2026-09-24 · P12** 增量同步与连接状态落地，双轨制（§2）：**拉取轨**——原生同步工作线程按 `change_events.seq` 全局单调游标增量拉取（start 时对齐 MAX(seq) 仅上报新事件，队列封顶 500，~15s 兜底拉）；**通知轨**——`LedgerRepo::AppendChangeEvent` 统一随事务 `NOTIFY recta_changes`（提交原子生效，监听端只见已提交变更），监听连接 `await_notification(1s)` 唤醒即拉。**关键工程决策**：Neon `-pooler`（PgBouncer 事务模式）不支持 LISTEN/NOTIFY——监听连接自动派生非池化端点（优先 `RECTA_DB_UNPOOLED_URL`，否则剥主机名 `-pooler` 后缀），拉取仍走池化。断线退避 1s×n 封顶 15s，重连后立即补拉保证收敛；4 个导出（start/stop/status/drain）。C# 侧 `SyncController`（UI 线程 DispatcherTimer 3s drain+status，事件转发）+ MainWindow 状态灯三态（绿=实时监听/橙=建连或重连中(含次数)/红=未运行，连接态统一由同步呈现，守恒异常压过连接色）+ `IRefreshable` 九页接入（他端变更到达即自动刷新当前页与统计）。**验收**：新增 xunit `NotifyReachesDrainAndCursorAdvances` 真库测试——池化连接写入同学 → NOTIFY → 非池化监听唤醒 → drain 收到 `student` 事件且游标单调推进，一次通过（20s 内）；冒烟截图确认状态灯绿。
 - **2026-09-24 · P11** 审计/预算看板落地，九个导航页全部实体化。原生新增 `recta_get_audit_statistics`（**服务端硬校验团支书角色**；单事务四段聚合 SQL：全局指标（提单量/驳回率/申报vs核准/审批·办结平均响应分钟）、逐人 LEFT JOIN 指标（含 `EXTRACT(EPOCH FROM (reviewed_at-created_at))` 时效）、渠道分布、驳回成因 Top5——时长与百分比为展示浮点，金额仍整数分）与 `recta_get_budget_overview`（近月已办结出账按渠道 + 入账合计，`date_trunc` 月度聚合）。**审计页**：五指标卡（驳回率红/核减差额）+ 常见驳回成因 + 逐人十列指标表（渠道分布缩写"灵活2 系报1"）；非团支书显示专属提示卡（§5.1 可见性分级）。**预算页**：三通道余额卡 + 近六月走势表（出账三渠道/合计/入账合计绿），纯只读。至此 §5.4 全部指标 GUI 化，双页截图走查通过。
 - **2026-09-24 · P10** 分户与入账页落地。原生层新增两条查询链路：`LedgerRepo::ListStudentLedger/ListInflows` → CAPI `recta_list_student_ledger/recta_list_inflows` → C# `ListStudentLedger/ListInflows` + DTO。**分户页**：守恒三元组四卡片（Σb/C_cash/A_advance/恒等徽示）、同学名单硬线表（余额负数红色）、**名单管理**（团支书录入/选中改名）、右侧选中详情 + **个人不可变流水**（类型语义着色：充值绿/分摊红，变动额与余额后值右对齐）+ **垫资披露**面板（当前透支同学逐人欠款与合计）；**入账页**：充值补缴表单（生活委员，目标同学下拉定向 `TO_STUDENT_SUB_ACCOUNT`）+ 全渠道入账台账（时间/来源/金额/去向/定向目标(姓名或关联单号)/经办人姓名联查）。双角色截图走查通过；Storage 7 项 + C# 全栈往返回归全绿。九个导航页中仅剩 预算/审计 为骨架（P11）。
 - **2026-09-24 · P9** 提单与走账页落地。共享 `NewRequestPanel`（渠道/事项/金额；班费时展开**参摊同学复选名单 + 尾差承担人下拉 + 领域 `DistributeExpense` 实时预演**——"N 人参摊、人均 x.xx、尾差承担人扣 y.yy、分项合计恒等"——P/Invoke 纯领域调用零延迟；`FixedChannel` 支持渠道页固定、提交成功 `RequestSubmitted` 事件驱动宿主刷新）；`ChannelRequestList`（渠道过滤紧凑单据列表，复用语义着色）。**走账页**（灵活公款）：余额卡 + 通道规则卡 + 增资表单（仅团支书可见，`TO_FLEXIBLE_ACCOUNT`）+ 固定渠道提单 + 渠道单据；**系报页**（系报销）：挂账(应收)卡 + **核销表单**（仅生活委员，金额/来源/关联单下拉只列已办结系报销单，`TO_FACULTY_REIMBURSE`）+ 固定渠道提单 + 渠道单据。审批页头部新增 [＋新提单]（折叠面板，自由选渠道）与刷新按钮。冒烟以团支书/生活委员双角色分别截图走账/系报页通过。**附带修复**：用户反馈"选中栏目蓝框包绿"——根因 FluentTheme 采纳 Windows 系统强调色（用户偏绿）渗入 Fluent 内部 Accent 资源：(1) 自绘 ListBoxItem 模板的 ContentPresenter 改名 `ContentHost`，避开 Fluent `:selected/:focus` 按 `PART_ContentPresenter` 名匹配的样式；(2) `SystemAccentColor` 七成员在 XAML 资源与 `App.Initialize` 代码双路钉死为 Recta 蓝阶，截图扫描选中行 60 行蓝 0 行绿验证。

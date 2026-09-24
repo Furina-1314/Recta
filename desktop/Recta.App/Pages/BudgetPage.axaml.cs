@@ -7,13 +7,15 @@ public sealed record BudgetRowVm(
     string Month, string Flexible, string Faculty, string ClassFund, string OutflowTotal,
     string InflowTotal);
 
-public partial class BudgetPage : UserControl
+public partial class BudgetPage : UserControl, IRefreshable
 {
     public BudgetPage()
     {
         InitializeComponent();
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

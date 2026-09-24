@@ -131,4 +131,17 @@ internal static partial class RectaNative
 
     [LibraryImport(Lib)]
     internal static partial int recta_get_budget_overview(byte[] buf, int cap);
+
+    // ---- 增量同步 ----
+    [LibraryImport(Lib)]
+    internal static partial int recta_sync_start();
+
+    [LibraryImport(Lib)]
+    internal static partial void recta_sync_stop();
+
+    [LibraryImport(Lib)]
+    internal static partial int recta_sync_status(byte[] buf, int cap);
+
+    [LibraryImport(Lib)]
+    internal static partial int recta_sync_drain(byte[] buf, int cap);
 }

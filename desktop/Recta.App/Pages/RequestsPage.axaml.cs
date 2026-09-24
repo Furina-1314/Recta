@@ -21,7 +21,7 @@ public sealed record RequestRow(
 
 public sealed record SplitLineVm(string Display, string AmountText);
 
-public partial class RequestsPage : UserControl
+public partial class RequestsPage : UserControl, IRefreshable
 {
     private IReadOnlyList<ExpenseRequestDto> _all = [];
     private Dictionary<string, string> _userNameById = new();
@@ -43,6 +43,8 @@ public partial class RequestsPage : UserControl
     private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
 
     // ---------- 数据装载 ----------
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

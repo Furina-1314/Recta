@@ -12,13 +12,15 @@ public sealed record StudentRowVm(
 public sealed record LedgerLineVm(
     string TypeLabel, IBrush TypeBrush, string Note, string ChangeText, string BalanceText);
 
-public partial class StudentsPage : UserControl
+public partial class StudentsPage : UserControl, IRefreshable
 {
     public StudentsPage()
     {
         InitializeComponent();
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

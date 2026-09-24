@@ -227,6 +227,30 @@ public sealed class RectaClient
         return Deserialize<BudgetOverview>(json);
     }
 
+    // ---- 增量同步 ----
+
+    public void SyncStart()
+    {
+        Check(RectaNative.recta_sync_start());
+    }
+
+    public void SyncStop()
+    {
+        RectaNative.recta_sync_stop();
+    }
+
+    public SyncStatusDto SyncStatus()
+    {
+        var json = CallString((buf, cap) => RectaNative.recta_sync_status(buf, cap));
+        return Deserialize<SyncStatusDto>(json);
+    }
+
+    public SyncDrainDto SyncDrain()
+    {
+        var json = CallString((buf, cap) => RectaNative.recta_sync_drain(buf, cap));
+        return Deserialize<SyncDrainDto>(json);
+    }
+
     // ---- 内部:返回码与缓冲 plumbing ----
 
     private static string CallString(Func<byte[], int, int> invoke)

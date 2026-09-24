@@ -7,13 +7,15 @@ public sealed record AuditRowVm(
     string Name, string Submitted, string Rejected, string Settled, string AppliedText,
     string ApprovedText, string SettledText, string Channels, string AvgReview, string AvgSettle);
 
-public partial class AuditPage : UserControl
+public partial class AuditPage : UserControl, IRefreshable
 {
     public AuditPage()
     {
         InitializeComponent();
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

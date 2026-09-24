@@ -4,7 +4,7 @@ using Recta.App.NativeInterop;
 
 namespace Recta.App.Pages;
 
-public partial class FlexiblePage : UserControl
+public partial class FlexiblePage : UserControl, IRefreshable
 {
     public FlexiblePage()
     {
@@ -14,7 +14,7 @@ public partial class FlexiblePage : UserControl
         Loaded += (_, _) => _ = RefreshAsync();
     }
 
-    private async Task RefreshAsync()
+    public async Task RefreshAsync()
     {
         if (!AppServices.NativeReady)
         {

@@ -8,7 +8,7 @@ public sealed record InflowRowVm(
     string Time, string Source, string AmountText, string DestinationLabel, string Target,
     string OperatorName);
 
-public partial class InflowPage : UserControl
+public partial class InflowPage : UserControl, IRefreshable
 {
     private Dictionary<string, string> _userNameById = new();
     private Dictionary<string, string> _studentNameById = new();
@@ -18,6 +18,8 @@ public partial class InflowPage : UserControl
         InitializeComponent();
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    public Task RefreshAsync() => LoadAsync();
 
     private async Task LoadAsync()
     {

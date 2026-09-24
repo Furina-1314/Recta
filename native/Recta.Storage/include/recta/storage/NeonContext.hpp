@@ -20,6 +20,9 @@ private:
 public:
     explicit NeonContext(std::string conn_str) : conn_str_(std::move(conn_str)) {}
 
+    // 同步监听连接需要非池化端点(PgBouncer 事务模式不支持 LISTEN/NOTIFY)。
+    [[nodiscard]] const std::string& connection_string() const noexcept { return conn_str_; }
+
     template <typename TxFunc>
     auto ExecuteTransaction(TxFunc&& func, int max_retries = 3) {
         for (int attempt = 1; attempt <= max_retries; ++attempt) {

@@ -190,3 +190,15 @@ public sealed record BudgetMonth(
 
 public sealed record BudgetOverview(
     [property: JsonPropertyName("months")] IReadOnlyList<BudgetMonth> Months);
+
+public sealed record SyncStatusDto(
+    [property: JsonPropertyName("running")] bool Running,
+    [property: JsonPropertyName("listening")] bool Listening,
+    [property: JsonPropertyName("reconnect_attempts")] int ReconnectAttempts,
+    [property: JsonPropertyName("cursor")] long Cursor,
+    [property: JsonPropertyName("pending")] long Pending);
+
+public sealed record SyncDrainDto(
+    [property: JsonPropertyName("events")] IReadOnlyList<ChangeEventDto> Events,
+    [property: JsonPropertyName("count")] long Count,
+    [property: JsonPropertyName("cursor")] long Cursor);

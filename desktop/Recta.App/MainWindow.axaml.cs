@@ -53,6 +53,12 @@ public partial class MainWindow : Window
         }
         Nav.SelectedIndex = initialIndex;
 
+        // 增量同步:监听他端变更,自动刷新当前页与状态栏。
+        SyncController.StatusChanged += OnSyncStatus;
+        SyncController.EventsReceived += OnSyncEvents;
+        Closed += (_, _) => SyncController.Stop();
+        SyncController.Start();
+
         if (AppServices.SmokeMode)
         {
             // 冒烟模式:渲染截图(明/暗各一张)后自动退出,供构建管线与视觉验收。
@@ -60,11 +66,42 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnSyncStatus(object? sender, SyncStatusDto status)
+    {
+        if (status.Listening)
+        {
+            DbDot.Fill = Brushes.ForestGreen;
+            DbText.Text = "连接正常 · 实时监听";
+        }
+        else if (status.Running)
+        {
+            DbDot.Fill = Brushes.Orange;
+            DbText.Text = status.ReconnectAttempts == 0
+                ? "正在建立实时监听…"
+                : $"重连中(第 {status.ReconnectAttempts} 次退避)";
+        }
+        else
+        {
+            DbDot.Fill = Brushes.Firebrick;
+            DbText.Text = "同步未运行";
+        }
+    }
+
+    private async void OnSyncEvents(object? sender, IReadOnlyList<ChangeEventDto> events)
+    {
+        StatusLeft.Text = $"收到 {events.Count} 条服务端变更,已刷新视图";
+        if (PageHost.Content is IRefreshable refreshable)
+        {
+            await refreshable.RefreshAsync();
+        }
+        await RefreshDbStatusAsync();
+    }
+
     private async Task CaptureSmokeScreensAsync()
     {
         try
         {
-            await Task.Delay(3200); // 等首帧渲染与大盘数据返回(Neon 冷启动余量)
+            await Task.Delay(5000); // 等首帧渲染、大盘数据返回与同步监听建立(Neon 冷启动余量)
 
             var outDir = Environment.GetEnvironmentVariable("RECTA_SMOKE_OUT")
                          ?? Path.Combine(AppContext.BaseDirectory, "smoke");
@@ -153,19 +190,24 @@ public partial class MainWindow : Window
             return;
         }
 
+        // 连接状态由同步监听(OnSyncStatus)统一呈现;此处仅刷新左下统计。
         try
         {
             var overview = await Task.Run(() => AppServices.Client.GetOverview());
-            DbDot.Fill = overview.Custody.Conserved
-                ? Brushes.ForestGreen
-                : Brushes.OrangeRed; // 守恒被破坏属最高级异常
-            DbText.Text = overview.Custody.Conserved ? "数据库连接正常 · 对账守恒" : "数据库连接正常 · 守恒异常!";
+            if (overview.Custody.Conserved && DbText.Text.StartsWith("连接正常"))
+            {
+                DbText.Text = "连接正常 · 实时监听 · 对账守恒";
+            }
+            else if (!overview.Custody.Conserved)
+            {
+                DbDot.Fill = Brushes.OrangeRed; // 守恒破坏属最高级异常,压过连接色
+                DbText.Text = "连接正常 · 守恒异常!";
+            }
             StatusLeft.Text = $"单据 {overview.StatusCounts.Values.Sum()} 项 · 待审理 {CountOf(overview, "PENDING_REVIEW")} · 待办结 {CountOf(overview, "APPROVED")}";
         }
         catch (RectaException)
         {
-            DbDot.Fill = Brushes.Firebrick;
-            DbText.Text = "数据库连接失败";
+            // 查询失败交由同步状态线程呈现,不在此覆盖连接灯。
         }
     }
 

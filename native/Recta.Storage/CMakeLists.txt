@@ -19,4 +19,5 @@ target_include_directories(recta_storage PUBLIC
 
 target_compile_features(recta_storage PUBLIC cxx_std_20)
 
-target_link_libraries(recta_storage PRIVATE libpqxx::pqxx)
+# PUBLIC:仓储签名暴露 pqxx::work&,消费方需要 pqxx 头与链接。
+target_link_libraries(recta_storage PUBLIC libpqxx::pqxx)

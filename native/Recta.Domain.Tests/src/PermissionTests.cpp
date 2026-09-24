@@ -80,4 +80,29 @@ TEST(PermissionTest, EnumStringMappingMatchesDdl) {
     EXPECT_EQ(recta::ToString(recta::InflowDestination::ToStudentSubAccount), "TO_STUDENT_SUB_ACCOUNT");
 }
 
+TEST(PermissionTest, EnumParseRoundTripAndRejectsUnknown) {
+    using R = recta::Role;
+    using C = recta::AccountCategory;
+    using S = recta::RequestStatus;
+    using D = recta::InflowDestination;
+
+    for (const auto role : {R::BranchSecretary, R::LifeCommittee, R::ClassCommittee}) {
+        EXPECT_EQ(recta::ParseRole(recta::ToString(role)), role);
+    }
+    for (const auto category : {C::Flexible, C::Faculty, C::ClassFund}) {
+        EXPECT_EQ(recta::ParseAccountCategory(recta::ToString(category)), category);
+    }
+    for (const auto status : {S::PendingReview, S::Approved, S::Settled, S::Rejected}) {
+        EXPECT_EQ(recta::ParseRequestStatus(recta::ToString(status)), status);
+    }
+    for (const auto dest : {D::ToFlexibleAccount, D::ToFacultyReimburse, D::ToStudentSubAccount}) {
+        EXPECT_EQ(recta::ParseInflowDestination(recta::ToString(dest)), dest);
+    }
+
+    EXPECT_EQ(recta::ParseRole("boss"), std::nullopt);
+    EXPECT_EQ(recta::ParseRole(""), std::nullopt);
+    EXPECT_EQ(recta::ParseAccountCategory("class_fund"), std::nullopt); // 大小写敏感
+    EXPECT_EQ(recta::ParseRequestStatus("settled "), std::nullopt);
+}
+
 } // namespace

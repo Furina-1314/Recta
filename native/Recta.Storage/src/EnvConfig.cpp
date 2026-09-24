@@ -49,14 +49,14 @@ std::optional<std::string> ExtractKey(const std::filesystem::path& file, std::st
     return std::nullopt;
 }
 
-std::filesystem::path FindEnvFile() {
+std::filesystem::path FindEnvFile(std::string_view filename) {
     if (const char* override_path = std::getenv("RECTA_ENV_FILE"); override_path && *override_path) {
         return override_path;
     }
     namespace fs = std::filesystem;
     std::error_code ec;
     for (fs::path dir = fs::current_path(ec); !ec; dir = dir.parent_path()) {
-        const fs::path candidate = dir / ".env.local";
+        const fs::path candidate = dir / filename;
         if (fs::exists(candidate, ec)) return candidate;
         if (!dir.has_relative_path() || dir.parent_path() == dir) break;
     }
@@ -68,15 +68,25 @@ std::filesystem::path FindEnvFile() {
 std::string LoadConnectionString() {
     if (const char* env = std::getenv("DATABASE_URL"); env && *env) return env;
 
-#if defined(_MSC_VER)
-#pragma warning(pop)
-#endif
-
-    const auto file = FindEnvFile();
+    const auto file = FindEnvFile(".env.local");
     if (!file.empty()) {
         if (auto value = ExtractKey(file, "DATABASE_URL")) return *value;
     }
     throw std::runtime_error("未找到数据库连接串：请设置 DATABASE_URL 环境变量，或在仓库根目录提供 .env.local");
 }
+
+std::optional<std::string> TryLoadTestConnectionString() {
+    if (const char* env = std::getenv("RECTA_TEST_DATABASE_URL"); env && *env) return env;
+
+    const auto file = FindEnvFile(".env.test.local");
+    if (!file.empty()) {
+        return ExtractKey(file, "DATABASE_URL");
+    }
+    return std::nullopt;
+}
+
+#if defined(_MSC_VER)
+#pragma warning(pop)
+#endif
 
 } // namespace recta::storage

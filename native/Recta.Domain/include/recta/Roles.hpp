@@ -3,6 +3,7 @@
 //   灵活走账(FLEXIBLE): 审批/办结 → 团支书唯一
 //   系报销(FACULTY):    审批/办结 → 生活委员唯一
 //   班费(CLASS_FUND):   审批 → 团支书或生活委员;办结 → 生活委员唯一
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -52,5 +53,11 @@ void AssertCanSettle(Role role, AccountCategory category);
 [[nodiscard]] std::string ToString(AccountCategory value);
 [[nodiscard]] std::string ToString(RequestStatus value);
 [[nodiscard]] std::string ToString(InflowDestination value);
+
+// 逆向解析:非法取值返回 std::nullopt(不抛——入库脏数据在边界即被识破)。
+[[nodiscard]] std::optional<Role> ParseRole(std::string_view text);
+[[nodiscard]] std::optional<AccountCategory> ParseAccountCategory(std::string_view text);
+[[nodiscard]] std::optional<RequestStatus> ParseRequestStatus(std::string_view text);
+[[nodiscard]] std::optional<InflowDestination> ParseInflowDestination(std::string_view text);
 
 } // namespace recta

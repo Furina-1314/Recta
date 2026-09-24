@@ -23,6 +23,9 @@ public:
     // 初始种子(P4 搭配首个用户创建后调用)。
     static void Insert(pqxx::work& tx, const std::string& name, const std::string& type,
                        const std::optional<std::string>& custodian_id);
+
+    // 席位交接:对应角色持有者变动时更新存管人。
+    static void SetCustodian(pqxx::work& tx, const std::string& type, const std::string& custodian_id);
 };
 
 } // namespace recta::storage

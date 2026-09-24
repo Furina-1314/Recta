@@ -60,4 +60,10 @@ void EntityAccountsRepo::Insert(pqxx::work& tx, const std::string& name, const s
         pqxx::params(name, type, custodian_id));
 }
 
+void EntityAccountsRepo::SetCustodian(pqxx::work& tx, const std::string& type,
+                                      const std::string& custodian_id) {
+    tx.exec("UPDATE accounts SET custodian_id = $2 WHERE type = $1",
+            pqxx::params(type, custodian_id));
+}
+
 } // namespace recta::storage

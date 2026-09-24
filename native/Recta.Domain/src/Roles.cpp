@@ -84,4 +84,33 @@ std::string ToString(InflowDestination value) {
     return "UNKNOWN_INFLOW_DESTINATION";
 }
 
+std::optional<Role> ParseRole(std::string_view text) {
+    if (text == "BRANCH_SECRETARY") return Role::BranchSecretary;
+    if (text == "LIFE_COMMITTEE") return Role::LifeCommittee;
+    if (text == "CLASS_COMMITTEE") return Role::ClassCommittee;
+    return std::nullopt;
+}
+
+std::optional<AccountCategory> ParseAccountCategory(std::string_view text) {
+    if (text == "FLEXIBLE") return AccountCategory::Flexible;
+    if (text == "FACULTY") return AccountCategory::Faculty;
+    if (text == "CLASS_FUND") return AccountCategory::ClassFund;
+    return std::nullopt;
+}
+
+std::optional<RequestStatus> ParseRequestStatus(std::string_view text) {
+    if (text == "PENDING_REVIEW") return RequestStatus::PendingReview;
+    if (text == "APPROVED") return RequestStatus::Approved;
+    if (text == "SETTLED") return RequestStatus::Settled;
+    if (text == "REJECTED") return RequestStatus::Rejected;
+    return std::nullopt;
+}
+
+std::optional<InflowDestination> ParseInflowDestination(std::string_view text) {
+    if (text == "TO_FLEXIBLE_ACCOUNT") return InflowDestination::ToFlexibleAccount;
+    if (text == "TO_FACULTY_REIMBURSE") return InflowDestination::ToFacultyReimburse;
+    if (text == "TO_STUDENT_SUB_ACCOUNT") return InflowDestination::ToStudentSubAccount;
+    return std::nullopt;
+}
+
 } // namespace recta

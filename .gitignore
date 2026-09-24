@@ -21,6 +21,7 @@ native/out/
 # ---- .NET (desktop/) ----
 desktop/*/bin/
 desktop/*/obj/
+desktop/.smoke/
 *.user
 .vs/
 artifacts/

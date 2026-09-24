@@ -3,7 +3,7 @@
 本档是 [Vibe.md](Vibe.md) 的执行进度与工程决策记录。规范以 Vibe.md 为唯一真理基准；本档记录"做到哪了、怎么落的"。
 
 - **最后更新**：2026-09-24
-- **当前阶段**：P6 完成，下一步 P7（Avalonia 壳与 Recta 主题）
+- **当前阶段**：P7 完成，下一步 P8（审批台账页：三栏 Master-Detail）
 - **仓库**：https://github.com/Furina-1314/Recta
 
 ---
@@ -72,7 +72,7 @@
 | **P4** | 身份认证：Argon2id 口令哈希、登录、首登强制改密、团支书账号管理（开立/停用/重置临时密码） | ✅ 完成 | 服务层单测 + 真库冒烟（Neon `recta-test` 分支） |
 | **P5** | 业务服务层：两阶段流转（审批/核减/驳回/办结原子事务闭环 §8.4）、入账引擎三通道、流水与 change_events 写入、守恒断言入库前强校验 | ✅ 完成 | 集成测试：平摊扣款后 Σb=C−A 恒等 |
 | **P6** | C ABI 导出层 `recta_capi.dll` + C# NativeInterop（P/Invoke + DTO） | ✅ 完成 | C# 侧往返调用领域函数成功 |
-| **P7** | Avalonia 壳与主题：App/MainWindow/SplitView 导航、RectaTheme.xaml（§1 令牌全量）、登录窗、9 页骨架（大盘/审批/分户/走账/系报/入账/预算/审计/设置） | ⬜ 未开始 | 程序启动可导航、明暗切换正确、全方角 |
+| **P7** | Avalonia 壳与主题：App/MainWindow/SplitView 导航、RectaTheme.xaml（§1 令牌全量）、登录窗、9 页骨架（大盘/审批/分户/走账/系报/入账/预算/审计/设置） | ✅ 完成 | 程序启动可导航、明暗切换正确、全方角（冒烟截图像素级验证） |
 | **P8** | 审批台账页（三栏 Master-Detail）：状态筛选/搜索/高密度表格/Inspector 滑入、审批（全额/核减）/驳回/确认办结扣款、底栏统计 | ⬜ 未开始 | 对照 §3 ASCII 布局走查 |
 | **P9** | 提单与走账页：新提单（渠道选择、班费平摊名单+尾差承担人+预览）、灵活公款走账、系报销挂账 | ⬜ 未开始 | 提单→审批→办结全链路 GUI 可走 |
 | **P10** | 分户与入账页：同学名单管理（团支书）、充值补缴入账、个人流水、垫资披露视图 | ⬜ 未开始 | 入账三通道 GUI 可走 |
@@ -101,7 +101,7 @@ Recta/
 ├─ Recta.Storage.Tests/  # 回滚式真库集成冒烟（production 分支）
 ├─ Recta.Core/           # 服务层：PasswordHasher/AuthService/WorkflowService/RosterService
 └─ Recta.Core.Tests/     # 单测 + recta-test 分支集成（认证 4 + 工作流 7）
-（desktop/ 自 P6 起建立：Recta.App.NativeInterop / Recta.App.NativeInterop.Tests / Recta.slnx）
+（desktop/：Recta.App〔Avalonia 壳、登录窗、大盘/设置功能页、七页骨架、Recta 主题〕/ Recta.App.NativeInterop / Recta.App.NativeInterop.Tests / Recta.slnx；冒烟截图输出至 desktop/.smoke，已 gitignore）
 ```
 
 ## 4. 变更日志
@@ -109,6 +109,7 @@ Recta/
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
 - **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。
 - **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），逐表核验列名与类型（金额列均为 `BIGINT`）。DDL 同步落盘 `db/schema/001_init.sql` 供复现。账号种子数据（users / 两实体账户）延至 P4 身份认证阶段一并处理。
+- **2026-09-24 · P7** `desktop/Recta.App`（Avalonia 11.3，net10.0）落地。**主题双文件制**（Avalonia 学习成本结论）：`RectaResources.axaml`（ResourceDictionary：明暗 ThemeDictionaries 十四画刷 + 7 级蓝色阶 Color + 等宽/图标字体键，经 `ResourceInclude` 合入）与 `RectaTheme.axaml`（`<Styles>` 根：全控件 `CornerRadius=0` 铁律、1px 实线输入面、`accent/danger` 按钮、自绘方角 `ListBoxItem` 模板、`card/page-title/money/money-value/stat-value/secondary/danger-text/icon` 类选择器体系，经 `StyleInclude` 合入）——Avalonia 无控件级 Style 属性与 Style.BasedOn，一律 Classes。壳：MainWindow（SplitView CompactInline 56/208、MDL2 图标导航九项、底部状态栏连接灯+守恒态+单量统计、用户席位卡）；LoginWindow（登录→首登强制改密面板→入主窗）；大盘页实时四通道卡片+守恒恒等式徽章+状态分布；设置页明暗切换+本人改密+版本；其余七页 SkeletonPage 骨架（标注落地 Phase）。**验收方式**：`RECTA_SMOKE=1` 冒烟模式跳过登录直入主窗，渲染明/暗两张 PNG（RenderTargetBitmap）后自动退出——像素级核验：选中导航实心 `#0078D7`、暗色主题 `#4DA3E8` 强调、画布 `#F3F3F3/#1F1F1F`、卡片边线 `#D2D2D2/#3E3E3E` 全部与令牌表一致；卡片数值随查询完成显示 0.00（生产库当前为空）。视觉走查修正：Fluent 半透明选中层不可穿透→改自绘模板；统计瓦片改左对齐；冒烟等待 3.2s 留 Neon 冷启动余量。
 - **2026-09-24 · P6** `Recta.CApi`（`recta_capi.dll`，6.2MB 全静态链接）与 `desktop/Recta.App.NativeInterop` 落地：C ABI 约定——成功返回写入字符数、失败返回负错误码（十档：参数/权限/认证/状态机/弱口令/数据库/逻辑/未就绪/缓冲/未知），异常绝不越界（统一 `DispatchError` 分派 + 线程局部 `recta_last_error`），金额一律 int64 分、复杂结构一律 nlohmann JSON。导出面覆盖：生命周期（init/init_test/shutdown/version）、领域纯函数（money format/parse、distribute 预览）、认证与账号管理全套、工作流全套（提单/审批/驳回/办结/入账/名单）、查询全套（台账/单据+分摊联查姓名/同学/实体账户/用户/总览守恒/变更事件增量）。C# 侧 `LibraryImport`（UTF-8 + byte[] 缓冲）+ `RectaClient` 高层封装（负码→`RectaException` 带原生错误消息）+ 全量 DTO。**决策**：`recta_dev_truncate_all` 仅在 `RECTA_DEV_TOOLS=ON` 编译（默认开发构建开，发布打包必须关），供跨语言测试复位 recta-test 分支。测试：xunit 5 项全绿——4 项领域往返 + 1 项全栈（C# 引导团支书→改密→开生活委员→录名单→预存→班费提单→核减 99.99→办结→守恒 Σb=C−A=−69.99→总览/台账/详情/事件流校验），叠加既有 C++ 40 项全绿。
 - **2026-09-24 · P5** `WorkflowService`/`RosterService` 落地，业务大脑成形：提单（班费必带平摊名单+尾差承担人，领域 `DistributeExpense` 当场算分摊入库）；审批两分支（全额/核减——核减理由必填、班费按核准额 `ReplaceSplits` 整单重算；驳回理由必填归档终止）；办结单事务原子闭环（权限硬前置 → 行级锁主单 → 状态机门槛 → 按渠道锁账户/锁全部分户(升序防死锁) → 扣账+Δadvance 回填 → 分摊合计==核准额防脏数据 → **守恒恒等式强校验(失败即回滚)** → 组装含垫资明细的办结批复 → SETTLED → change_events）；入账三通道（灵活增资=团支书、系核销=生活委员且必关联已办结系报销单+核销不得超挂账、同学补缴=生活委员定向平负，充值后同样守恒校验）；名单管理仅团支书。**渠道账务语义决策**：FACULTY 账户余额=挂账应收（办结+、核销−、余额不足拒核销）。权限先于状态机检查（未授权者无论单据状态一律 PermissionDeniedException，§8.3）。测试 +7（灵活全流程+权限矩阵、余额不足拒付、班费平摊垫资+守恒、核减重算、系报销挂账核销闭环、提单/审批校验、名单权限+补缴平账）全绿；全项目 47 用例绿。
 - **2026-09-24 · P4** `Recta.Core` 落地：`PasswordHasher`（libsodium Argon2id，`crypto_pwhash_str` 交互级参数，哈希串 <128 字符合 VARCHAR(255)；临时口令 CSPRNG + 57 字符无歧义字母表 + 拒绝采样消模偏）、`AuthService`（登录统一失败语义不泄露失败原因、首登强制改密闭环、改密含弱口令策略 8~64 位、团支书专属开号/重置/停用/改名且仅可改 display_name、团支书与生活委员活动席位唯一强校验、`BootstrapFirstSecretary` 一次性引导首任团支书并绑定灵活公款存管人、生活委员开立即绑定系报销账户存管人）。基础设施：Neon 新增 `recta-test` 分支（从 production 复制 schema）作集成测试沙箱，`TryLoadTestConnectionString` 读 `RECTA_TEST_DATABASE_URL` / `.env.test.local`（均 gitignored）。测试：Domain 26 + Storage 7 + Core 7（哈希单测 3 + 认证集成 4）全绿；pqxx 改为 Storage 的 PUBLIC 依赖（仓储签名暴露 pqxx::work&）。

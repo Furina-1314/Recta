@@ -1,4 +1,5 @@
 <Solution>
+  <Project Path="Recta.App/Recta.App.csproj" />
   <Project Path="Recta.App.NativeInterop/Recta.App.NativeInterop.csproj" />
   <Project Path="Recta.App.NativeInterop.Tests/Recta.App.NativeInterop.Tests.csproj" />
 </Solution>

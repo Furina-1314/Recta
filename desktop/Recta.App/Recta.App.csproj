@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Recta.App</RootNamespace>
+    <AssemblyName>Recta.App</AssemblyName>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.*" />
+    <PackageReference Include="Avalonia.Desktop" Version="11.3.*" />
+    <PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Recta.App.NativeInterop\Recta.App.NativeInterop.csproj" />
+  </ItemGroup>
+
+  <!-- 原生核心 DLL 存在时随程序输出(先构建 native/,再 dotnet build)。 -->
+  <ItemGroup Condition="Exists('..\..\native\build\win-x64-release\Recta.CApi\Release\recta_capi.dll')">
+    <Content Include="..\..\native\build\win-x64-release\Recta.CApi\Release\recta_capi.dll"
+             Link="recta_capi.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

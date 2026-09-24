@@ -1,0 +1,54 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Recta.App.LoginWindow"
+        Title="Recta 矩衡 · 登录"
+        Width="440" Height="520" CanResize="False"
+        WindowStartupLocation="CenterScreen"
+        Background="{DynamicResource RectaCanvasBrush}"
+        FontSize="14">
+
+    <ScrollViewer>
+        <StackPanel Margin="40,48" Spacing="14" MaxWidth="360">
+
+            <TextBlock Text="RECTA" FontSize="26" LetterSpacing="180" FontWeight="SemiBold"
+                       Foreground="{DynamicResource RectaAccentBrush}" />
+            <TextBlock Text="矩衡 · 班委财务审批与分户账管理系统" Classes="secondary"
+                       Margin="0,0,0,20" TextWrapping="Wrap" />
+
+            <!-- 登录面板 -->
+            <StackPanel x:Name="LoginPanel" Spacing="12">
+                <TextBlock Text="用户名" />
+                <TextBox x:Name="UsernameBox" Watermark="由团支书开立的固定用户名" />
+
+                <TextBlock Text="口令" Margin="0,6,0,0" />
+                <TextBox x:Name="PasswordBox" PasswordChar="●" />
+
+                <Button x:Name="LoginButton" Classes="accent" Content="登 录" Click="OnLogin"
+                        HorizontalAlignment="Stretch" Margin="0,10,0,0" />
+            </StackPanel>
+
+            <!-- 首登强制改密面板(§5.1:初次登录强制改密) -->
+            <StackPanel x:Name="ChangePanel" Spacing="12" IsVisible="False">
+                <Border Classes="card" BorderBrush="{DynamicResource RectaAccentBrush}">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="首次登录：必须修改口令后方可使用系统" FontWeight="SemiBold" />
+                        <TextBlock Text="临时口令由团支书线下转交，请立即替换为您的私人口令。"
+                                   Classes="secondary" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+                <TextBlock Text="当前口令(临时)" />
+                <TextBox x:Name="OldPasswordBox" PasswordChar="●" />
+                <TextBlock Text="新口令(8~64 位)" Margin="0,6,0,0" />
+                <TextBox x:Name="NewPasswordBox" PasswordChar="●" />
+                <TextBlock Text="确认新口令" Margin="0,6,0,0" />
+                <TextBox x:Name="ConfirmPasswordBox" PasswordChar="●" />
+                <Button Classes="accent" Content="确认修改并进入系统" Click="OnChangePassword"
+                        HorizontalAlignment="Stretch" Margin="0,10,0,0" />
+            </StackPanel>
+
+            <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap"
+                       IsVisible="False" Margin="0,8,0,0" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

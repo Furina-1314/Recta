@@ -1,0 +1,21 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Recta.App.Pages.SkeletonPage">
+
+    <ScrollViewer>
+        <StackPanel Margin="28,24" Spacing="12" MaxWidth="720">
+            <TextBlock x:Name="TitleText" Classes="page-title" Margin="0" />
+            <TextBlock x:Name="NoteText" Classes="secondary" TextWrapping="Wrap" />
+
+            <Border Classes="card" Margin="0,12,0,0" MinHeight="220">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="10">
+                    <TextBlock x:Name="GlyphText" Classes="icon" FontSize="36"
+                               HorizontalAlignment="Center"
+                               Foreground="{DynamicResource RectaAccentBrush}" />
+                    <TextBlock Text="模块骨架就绪,功能在后续 Phase 落地"
+                               Classes="secondary" HorizontalAlignment="Center" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

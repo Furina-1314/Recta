@@ -1,0 +1,71 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Recta.App.MainWindow"
+        Title="Recta 矩衡"
+        Width="1280" Height="820"
+        Background="{DynamicResource RectaCanvasBrush}"
+        FontSize="14">
+
+    <DockPanel>
+        <!-- 底部状态栏(§3 布局:记录数 | 待办 | 连接状态) -->
+        <Border DockPanel.Dock="Bottom" Background="{DynamicResource RectaPaneBrush}"
+                BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,1,0,0"
+                Padding="14,7">
+            <Grid ColumnDefinitions="*,Auto">
+                <StackPanel Orientation="Horizontal" Spacing="20">
+                    <TextBlock x:Name="StatusLeft" Text="就绪" Opacity="0.78" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                    <Ellipse x:Name="DbDot" Width="8" Height="8" Fill="{DynamicResource RectaPositiveBrush}" />
+                    <TextBlock x:Name="DbText" Text="数据库连接正常" Opacity="0.78" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <SplitView x:Name="Shell" DisplayMode="CompactInline" IsPaneOpen="True"
+                   OpenPaneLength="208" CompactPaneLength="56"
+                   PaneBackground="{DynamicResource RectaPaneBrush}">
+            <SplitView.Pane>
+                <DockPanel>
+                    <!-- 品牌区 -->
+                    <Border DockPanel.Dock="Top" Height="64"
+                            BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                        <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="6,0">
+                            <Button Width="44" MinWidth="0" MinHeight="0" Padding="0" Margin="0"
+                                    Background="Transparent" BorderThickness="0"
+                                    Click="OnTogglePane" AutomationProperties.Name="展开或收起导航">
+                                <TextBlock Text="&#xE700;" Classes="icon" FontSize="18" />
+                            </Button>
+                            <TextBlock Text="RECTA" FontSize="15" LetterSpacing="140" FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- 当前用户 -->
+                    <Border DockPanel.Dock="Bottom" Padding="14,10"
+                            BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,0">
+                        <StackPanel Spacing="2">
+                            <TextBlock x:Name="UserNameText" Text="—" FontWeight="SemiBold" />
+                            <TextBlock x:Name="UserRoleText" Text="—" Classes="secondary"
+                                       FontSize="12" />
+                        </StackPanel>
+                    </Border>
+
+                    <ListBox x:Name="Nav" Background="Transparent" SelectionChanged="OnNavChanged"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Spacing="16">
+                                    <TextBlock Text="{Binding Glyph}" Classes="icon" Width="20" />
+                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </DockPanel>
+            </SplitView.Pane>
+
+            <ContentControl x:Name="PageHost" />
+        </SplitView>
+    </DockPanel>
+</Window>

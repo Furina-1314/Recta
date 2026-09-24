@@ -1,0 +1,58 @@
+<ResourceDictionary xmlns="https://github.com/avaloniaui"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      Recta 资源令牌 —— Win10 UWP / MDL2 视觉语言(Vibe.md §3)。
+      组织方式取自 Equora UwpTheme.xaml:单一主题色向两侧展开 7 级色阶 + 明暗双主题
+      结构画刷;主题色采用规范指定的 Classic UWP Blue #0078D7(不沿用 Equora 默认红)。
+    -->
+
+    <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="RectaCanvasBrush" Color="#F3F3F3" />
+            <SolidColorBrush x:Key="RectaSurfaceBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="RectaPaneBrush" Color="#F9F9F9" />
+            <SolidColorBrush x:Key="RectaDividerBrush" Color="#D2D2D2" />
+            <SolidColorBrush x:Key="RectaAccentBrush" Color="#0078D7" />
+            <SolidColorBrush x:Key="RectaOnAccentBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="RectaAccentDimBrush" Color="#1A8BE1" />
+            <SolidColorBrush x:Key="RectaPositiveBrush" Color="#107C41" />
+            <SolidColorBrush x:Key="RectaDangerBrush" Color="#D13438" />
+            <SolidColorBrush x:Key="RectaPendingBrush" Color="#797673" />
+            <SolidColorBrush x:Key="RectaTextPrimaryBrush" Color="#1F1F1F" />
+            <SolidColorBrush x:Key="RectaTextSecondaryBrush" Color="#5D5D5D" />
+            <SolidColorBrush x:Key="RectaControlFillBrush" Color="#FFFFFF" />
+            <SolidColorBrush x:Key="RectaControlHoverBrush" Color="#EDEDED" />
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="RectaCanvasBrush" Color="#1F1F1F" />
+            <SolidColorBrush x:Key="RectaSurfaceBrush" Color="#2B2B2B" />
+            <SolidColorBrush x:Key="RectaPaneBrush" Color="#232323" />
+            <SolidColorBrush x:Key="RectaDividerBrush" Color="#3E3E3E" />
+            <SolidColorBrush x:Key="RectaAccentBrush" Color="#4DA3E8" />
+            <SolidColorBrush x:Key="RectaOnAccentBrush" Color="#1F1F1F" />
+            <SolidColorBrush x:Key="RectaAccentDimBrush" Color="#8FC7F1" />
+            <SolidColorBrush x:Key="RectaPositiveBrush" Color="#4CC38A" />
+            <SolidColorBrush x:Key="RectaDangerBrush" Color="#FF6B70" />
+            <SolidColorBrush x:Key="RectaPendingBrush" Color="#A0A0A0" />
+            <SolidColorBrush x:Key="RectaTextPrimaryBrush" Color="#F2F2F2" />
+            <SolidColorBrush x:Key="RectaTextSecondaryBrush" Color="#A6A6A6" />
+            <SolidColorBrush x:Key="RectaControlFillBrush" Color="#2B2B2B" />
+            <SolidColorBrush x:Key="RectaControlHoverBrush" Color="#383838" />
+        </ResourceDictionary>
+    </ResourceDictionary.ThemeDictionaries>
+
+    <!-- 强调色 7 级色阶(主题无关;Dark 主题取 Light2 为 AccentBrush,见上) -->
+    <Color x:Key="RectaAccentDark3">#00437A</Color>
+    <Color x:Key="RectaAccentDark2">#005598</Color>
+    <Color x:Key="RectaAccentDark1">#0067B7</Color>
+    <Color x:Key="RectaAccentBase">#0078D7</Color>
+    <Color x:Key="RectaAccentLight1">#1A8BE1</Color>
+    <Color x:Key="RectaAccentLight2">#4DA3E8</Color>
+    <Color x:Key="RectaAccentLight3">#8FC7F1</Color>
+
+    <FontFamily x:Key="RectaMonoFont">Cascadia Mono,Consolas,Courier New</FontFamily>
+    <FontFamily x:Key="RectaIconFont">Segoe MDL2 Assets</FontFamily>
+    <Thickness x:Key="RectaCardPadding">16</Thickness>
+
+</ResourceDictionary>

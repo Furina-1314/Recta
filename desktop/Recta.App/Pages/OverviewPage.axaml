@@ -1,0 +1,94 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Recta.App.Pages.OverviewPage">
+
+    <ScrollViewer>
+        <StackPanel Margin="28,24" Spacing="16" MaxWidth="1080">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="大盘" Classes="page-title" Margin="0" />
+                <Button Grid.Column="1" Content="刷新" Click="OnRefresh" VerticalAlignment="Bottom" />
+            </Grid>
+            <TextBlock Text="全班资金核算总览 —— Σb = C_cash − A_advance 恒等式实时快照"
+                       Classes="secondary" Margin="0,0,0,4" />
+
+            <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap"
+                       IsVisible="False" />
+
+            <!-- 四通道余额卡片 -->
+            <Grid ColumnDefinitions="*,12,*,12,*,12,*">
+                <Border Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="灵活公款余额" Classes="secondary" />
+                        <TextBlock x:Name="FlexibleValue" Classes="money money-value"
+                                   Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="系报销挂账(应收)" Classes="secondary" />
+                        <TextBlock x:Name="FacultyValue" Classes="money money-value"
+                                   Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="代管实存 C_cash" Classes="secondary" />
+                        <TextBlock x:Name="CashValue" Classes="money money-value"
+                                   Foreground="{DynamicResource RectaPositiveBrush}" Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="6" Classes="card">
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="生委垫资 A_advance" Classes="secondary" />
+                        <TextBlock x:Name="AdvanceValue" Classes="money money-value"
+                                   Foreground="{DynamicResource RectaDangerBrush}" Text="—" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 守恒恒等式 -->
+            <Border Classes="card">
+                <Grid ColumnDefinitions="Auto,*,Auto">
+                    <StackPanel Spacing="4">
+                        <TextBlock Text="对账守恒定律(§4.1)" FontWeight="SemiBold" />
+                        <TextBlock Text="全班分户余额代数和 = 代管实存 − 生委垫资" Classes="secondary" />
+                    </StackPanel>
+                    <TextBlock x:Name="ConservationFormula" Grid.Column="1" HorizontalAlignment="Center"
+                               VerticalAlignment="Center" Classes="money"
+                               FontSize="18" Text="Σb = 0.00 = 0.00 − 0.00" />
+                    <Border Grid.Column="2" Padding="10,4" VerticalAlignment="Center"
+                            Background="{DynamicResource RectaPositiveBrush}">
+                        <TextBlock x:Name="ConservationBadge" Text="恒等成立" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 单据状态分布 -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="动账单据状态分布" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,*,*,*">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="待审理" Classes="secondary" />
+                            <TextBlock x:Name="PendingCount" Classes="stat-value" Text="0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Spacing="2">
+                            <TextBlock Text="待办结" Classes="secondary" />
+                            <TextBlock x:Name="ApprovedCount" Classes="stat-value" Text="0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="2">
+                            <TextBlock Text="已办结" Classes="secondary" />
+                            <TextBlock x:Name="SettledCount" Classes="stat-value" Text="0" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="3" Spacing="2">
+                            <TextBlock Text="已驳回" Classes="secondary" />
+                            <TextBlock x:Name="RejectedCount" Classes="stat-value" Text="0" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

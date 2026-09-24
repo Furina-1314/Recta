@@ -1,0 +1,134 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+      Recta 控件样式集 —— 铁律:绝对方角、1px 实体细线、无扩散阴影、金额等宽右对齐。
+      资源令牌(色阶/画刷/字体)见 RectaResources.axaml。
+    -->
+
+    <!-- 绝对方角铁律:全部交互容器 CornerRadius=0 -->
+    <Style Selector="Button, ToggleButton, TextBox, ComboBox, ComboBoxItem, CheckBox, RadioButton, ToggleSwitch, ListBoxItem, TabItem, TabControl, Slider, ProgressBar">
+        <Setter Property="CornerRadius" Value="0" />
+    </Style>
+
+    <!-- 输入面:表层面 + 1px 实线边框(靠明度差与细线硬分割,无阴影) -->
+    <Style Selector="TextBox, ComboBox">
+        <Setter Property="Background" Value="{DynamicResource RectaControlFillBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RectaDividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="10,6" />
+    </Style>
+
+    <Style Selector="Button">
+        <Setter Property="MinHeight" Value="34" />
+        <Setter Property="Padding" Value="16,6" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RectaDividerBrush}" />
+        <Setter Property="Background" Value="{DynamicResource RectaSurfaceBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource RectaTextPrimaryBrush}" />
+    </Style>
+    <Style Selector="Button.accent">
+        <Setter Property="Background" Value="{DynamicResource RectaAccentBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource RectaOnAccentBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+    <Style Selector="Button.accent:pointerover /template/ ContentPresenter#PART_ContentPresenter">
+        <Setter Property="Background" Value="{DynamicResource RectaAccentDimBrush}" />
+        <Setter Property="BorderThickness" Value="0" />
+    </Style>
+    <Style Selector="Button.danger">
+        <Setter Property="Background" Value="{DynamicResource RectaDangerBrush}" />
+        <Setter Property="Foreground" Value="#FFFFFF" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- 导航/列表项:自绘方角模板——选中态实心强调色,不依赖 Fluent 半透明选中层 -->
+    <Style Selector="ListBoxItem">
+        <Setter Property="Foreground" Value="{DynamicResource RectaTextPrimaryBrush}" />
+        <Setter Property="Padding" Value="14,9" />
+        <Setter Property="MinHeight" Value="40" />
+        <Setter Property="Template">
+            <ControlTemplate>
+                <Panel>
+                    <Border x:Name="SelectionSurface" />
+                    <ContentPresenter x:Name="PART_ContentPresenter"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      Foreground="{TemplateBinding Foreground}" />
+                </Panel>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+    <Style Selector="ListBoxItem:pointerover /template/ Border#SelectionSurface">
+        <Setter Property="Background" Value="{DynamicResource RectaControlHoverBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected /template/ Border#SelectionSurface">
+        <Setter Property="Background" Value="{DynamicResource RectaAccentBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected:pointerover /template/ Border#SelectionSurface">
+        <Setter Property="Background" Value="{DynamicResource RectaAccentBrush}" />
+    </Style>
+    <Style Selector="ListBoxItem:selected">
+        <Setter Property="Foreground" Value="{DynamicResource RectaOnAccentBrush}" />
+    </Style>
+
+    <!-- 表层卡片:Surface + 1px Divider(唯一的"面板"语言) -->
+    <Style Selector="Border.card">
+        <Setter Property="Background" Value="{DynamicResource RectaSurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource RectaDividerBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="16" />
+    </Style>
+
+    <!-- 页面大标题(Equora PageTitleStyle 同款气质:Light 字重大号) -->
+    <Style Selector="TextBlock.page-title">
+        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontWeight" Value="Light" />
+        <Setter Property="Foreground" Value="{DynamicResource RectaAccentBrush}" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+    </Style>
+
+    <!-- 财务数字:等宽表格数字 + 右对齐,保证数位与小数点垂直对齐(§3) -->
+    <Style Selector="TextBlock.money">
+        <Setter Property="FontFamily" Value="{DynamicResource RectaMonoFont}" />
+        <Setter Property="TextAlignment" Value="Right" />
+    </Style>
+    <!-- 与 Classes="money money-value" 搭配(后者覆盖尺寸与字重,声明顺序在后故优先生效) -->
+    <Style Selector="TextBlock.money-value">
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- 统计瓦片数值:等宽数字、左对齐(标签与数值同侧起排,阅读线平直) -->
+    <Style Selector="TextBlock.stat-value">
+        <Setter Property="FontFamily" Value="{DynamicResource RectaMonoFont}" />
+        <Setter Property="FontSize" Value="20" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <!-- 语义着色 -->
+    <Style Selector="TextBlock.secondary">
+        <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+    </Style>
+    <Style Selector="TextBlock.positive">
+        <Setter Property="Foreground" Value="{DynamicResource RectaPositiveBrush}" />
+    </Style>
+    <Style Selector="TextBlock.danger-text">
+        <Setter Property="Foreground" Value="{DynamicResource RectaDangerBrush}" />
+    </Style>
+    <Style Selector="TextBlock.pending">
+        <Setter Property="Foreground" Value="{DynamicResource RectaPendingBrush}" />
+    </Style>
+
+    <!-- MDL2 图标 -->
+    <Style Selector="TextBlock.icon">
+        <Setter Property="FontFamily" Value="{DynamicResource RectaIconFont}" />
+        <Setter Property="FontSize" Value="16" />
+    </Style>
+
+</Styles>

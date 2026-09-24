@@ -1,0 +1,47 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="Recta.App.Pages.SettingsPage">
+
+    <ScrollViewer>
+        <StackPanel Margin="28,24" Spacing="16" MaxWidth="720">
+
+            <TextBlock Text="设置" Classes="page-title" Margin="0" />
+
+            <!-- 外观 -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="外观" FontWeight="SemiBold" />
+                    <RadioButton x:Name="LightRadio" Content="浅色主题" Click="OnThemeClick" />
+                    <RadioButton x:Name="DarkRadio" Content="深色主题" Click="OnThemeClick" />
+                </StackPanel>
+            </Border>
+
+            <!-- 修改口令(仅本人,§5.1) -->
+            <Border Classes="card">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="修改本人口令" FontWeight="SemiBold" />
+                    <TextBlock Text="原口令" />
+                    <TextBox x:Name="OldPasswordBox" PasswordChar="●" MaxWidth="360" HorizontalAlignment="Left" />
+                    <TextBlock Text="新口令(8~64 位)" />
+                    <TextBox x:Name="NewPasswordBox" PasswordChar="●" MaxWidth="360" HorizontalAlignment="Left" />
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Button Classes="accent" Content="确认修改" Click="OnChangePassword" />
+                        <TextBlock x:Name="PasswordResultText" VerticalAlignment="Center"
+                                   Classes="secondary" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 关于 -->
+            <Border Classes="card">
+                <StackPanel Spacing="8">
+                    <TextBlock Text="关于" FontWeight="SemiBold" />
+                    <TextBlock x:Name="VersionText" Classes="secondary" Text="—" />
+                    <TextBlock Text="严禁模糊账目 · 金额全程整数分 · 禁用浮点与 WebView"
+                               Classes="secondary" />
+                </StackPanel>
+            </Border>
+
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

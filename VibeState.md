@@ -102,5 +102,5 @@ Recta/
 ## 4. 变更日志
 
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
-- **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘法）、`DistributeExpense` 尾差平摊、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`PermissionGuard` 两阶段 RBAC 硬约束、全量枚举；gtest 27 用例全绿（MSVC x64 Release）。
-- **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），字段与 Vibe.md 一致。
+- **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。
+- **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），逐表核验列名与类型（金额列均为 `BIGINT`）。DDL 同步落盘 `db/schema/001_init.sql` 供复现。账号种子数据（users / 两实体账户）延至 P4 身份认证阶段一并处理。

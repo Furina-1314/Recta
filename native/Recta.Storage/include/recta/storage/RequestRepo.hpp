@@ -31,7 +31,13 @@ public:
                             const std::string& settler_id, const std::optional<std::string>& notes);
 
     static void InsertSplits(pqxx::work& tx, int request_id, const std::vector<SplitRow>& splits);
+    // 核减后按新核准金额整单重算分摊(先清后写)。
+    static void ReplaceSplits(pqxx::work& tx, int request_id, const std::vector<SplitRow>& splits);
     [[nodiscard]] static std::vector<SplitRow> ListSplits(pqxx::work& tx, int request_id);
+
+    // 办结时回填每人 Δadvance(§4.2 计算结果)。
+    static void SetSplitAdvance(pqxx::work& tx, int request_id, const std::string& student_id,
+                                int64_t advance_cents);
 };
 
 } // namespace recta::storage

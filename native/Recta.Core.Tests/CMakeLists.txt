@@ -5,6 +5,7 @@ find_package(unofficial-sodium CONFIG REQUIRED)
 add_executable(recta_core_tests
     src/PasswordHasherTests.cpp
     src/AuthServiceTests.cpp
+    src/WorkflowServiceTests.cpp
 )
 
 target_compile_features(recta_core_tests PRIVATE cxx_std_20)

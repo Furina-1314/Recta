@@ -124,6 +124,11 @@ void RequestRepo::InsertSplits(pqxx::work& tx, int request_id, const std::vector
     }
 }
 
+void RequestRepo::ReplaceSplits(pqxx::work& tx, int request_id, const std::vector<SplitRow>& splits) {
+    tx.exec("DELETE FROM expense_splits WHERE request_id = $1", pqxx::params(request_id));
+    InsertSplits(tx, request_id, splits);
+}
+
 std::vector<SplitRow> RequestRepo::ListSplits(pqxx::work& tx, int request_id) {
     const auto result = tx.exec(
         "SELECT student_id, amount_cents, is_tail_bearer, advance_cents "
@@ -140,6 +145,14 @@ std::vector<SplitRow> RequestRepo::ListSplits(pqxx::work& tx, int request_id) {
         splits.push_back(std::move(split));
     }
     return splits;
+}
+
+void RequestRepo::SetSplitAdvance(pqxx::work& tx, int request_id, const std::string& student_id,
+                                  int64_t advance_cents) {
+    tx.exec(
+        "UPDATE expense_splits SET advance_cents = $3 "
+        "WHERE request_id = $1 AND student_id = $2",
+        pqxx::params(request_id, student_id, advance_cents));
 }
 
 } // namespace recta::storage

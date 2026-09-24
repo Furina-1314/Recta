@@ -4,6 +4,7 @@ find_package(unofficial-sodium CONFIG REQUIRED)
 add_library(recta_core STATIC
     src/PasswordHasher.cpp
     src/AuthService.cpp
+    src/WorkflowService.cpp
 )
 
 add_library(Recta::Core ALIAS recta_core)

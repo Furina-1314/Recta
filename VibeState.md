@@ -3,7 +3,7 @@
 本档是 [Vibe.md](Vibe.md) 的执行进度与工程决策记录。规范以 Vibe.md 为唯一真理基准；本档记录"做到哪了、怎么落的"。
 
 - **最后更新**：2026-09-24
-- **当前阶段**：P4 完成，下一步 P5（业务服务层：两阶段流转 + 入账引擎）
+- **当前阶段**：P5 完成，下一步 P6（C ABI 导出层 + C# 互操作）
 - **仓库**：https://github.com/Furina-1314/Recta
 
 ---
@@ -70,7 +70,7 @@
 | **P2** | 数据库 DDL 落地：Vibe.md §6 全部 8 表于 Neon `production` 分支 | ✅ 完成 | MCP describe 确认表结构与列类型 |
 | **P3** | 存储层：`NeonContext` 抗休眠重试执行器（§7.2）、.env.local 连接装载、各表仓储（含 `FOR UPDATE` 行锁封装） | ✅ 完成 | C++ 冒烟测试对 Neon 读写往返成功 |
 | **P4** | 身份认证：Argon2id 口令哈希、登录、首登强制改密、团支书账号管理（开立/停用/重置临时密码） | ✅ 完成 | 服务层单测 + 真库冒烟（Neon `recta-test` 分支） |
-| **P5** | 业务服务层：两阶段流转（审批/核减/驳回/办结原子事务闭环 §8.4）、入账引擎三通道、流水与 change_events 写入、守恒断言入库前强校验 | ⬜ 未开始 | 集成测试：平摊扣款后 Σb=C−A 恒等 |
+| **P5** | 业务服务层：两阶段流转（审批/核减/驳回/办结原子事务闭环 §8.4）、入账引擎三通道、流水与 change_events 写入、守恒断言入库前强校验 | ✅ 完成 | 集成测试：平摊扣款后 Σb=C−A 恒等 |
 | **P6** | C ABI 导出层 `recta_capi.dll` + C# NativeInterop（P/Invoke + DTO） | ⬜ 未开始 | C# 侧往返调用领域函数成功 |
 | **P7** | Avalonia 壳与主题：App/MainWindow/SplitView 导航、RectaTheme.xaml（§1 令牌全量）、登录窗、9 页骨架（大盘/审批/分户/走账/系报/入账/预算/审计/设置） | ⬜ 未开始 | 程序启动可导航、明暗切换正确、全方角 |
 | **P8** | 审批台账页（三栏 Master-Detail）：状态筛选/搜索/高密度表格/Inspector 滑入、审批（全额/核减）/驳回/确认办结扣款、底栏统计 | ⬜ 未开始 | 对照 §3 ASCII 布局走查 |
@@ -99,8 +99,8 @@ Recta/
 ├─ Recta.Domain.Tests/   # gtest
 ├─ Recta.Storage/        # pqxx 存储：NeonContext/EnvConfig/六组仓储
 ├─ Recta.Storage.Tests/  # 回滚式真库集成冒烟（production 分支）
-├─ Recta.Core/           # 服务层：PasswordHasher(Argon2id)/AuthService
-└─ Recta.Core.Tests/     # 单测 + recta-test 分支集成
+├─ Recta.Core/           # 服务层：PasswordHasher/AuthService/WorkflowService/RosterService
+└─ Recta.Core.Tests/     # 单测 + recta-test 分支集成（认证 4 + 工作流 7）
 （desktop/ 自 P6/P7 起建立：Recta.App / Recta.App.NativeInterop / Recta.App.ViewModels / Recta.slnx）
 ```
 
@@ -109,5 +109,6 @@ Recta/
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
 - **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。
 - **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），逐表核验列名与类型（金额列均为 `BIGINT`）。DDL 同步落盘 `db/schema/001_init.sql` 供复现。账号种子数据（users / 两实体账户）延至 P4 身份认证阶段一并处理。
+- **2026-09-24 · P5** `WorkflowService`/`RosterService` 落地，业务大脑成形：提单（班费必带平摊名单+尾差承担人，领域 `DistributeExpense` 当场算分摊入库）；审批两分支（全额/核减——核减理由必填、班费按核准额 `ReplaceSplits` 整单重算；驳回理由必填归档终止）；办结单事务原子闭环（权限硬前置 → 行级锁主单 → 状态机门槛 → 按渠道锁账户/锁全部分户(升序防死锁) → 扣账+Δadvance 回填 → 分摊合计==核准额防脏数据 → **守恒恒等式强校验(失败即回滚)** → 组装含垫资明细的办结批复 → SETTLED → change_events）；入账三通道（灵活增资=团支书、系核销=生活委员且必关联已办结系报销单+核销不得超挂账、同学补缴=生活委员定向平负，充值后同样守恒校验）；名单管理仅团支书。**渠道账务语义决策**：FACULTY 账户余额=挂账应收（办结+、核销−、余额不足拒核销）。权限先于状态机检查（未授权者无论单据状态一律 PermissionDeniedException，§8.3）。测试 +7（灵活全流程+权限矩阵、余额不足拒付、班费平摊垫资+守恒、核减重算、系报销挂账核销闭环、提单/审批校验、名单权限+补缴平账）全绿；全项目 47 用例绿。
 - **2026-09-24 · P4** `Recta.Core` 落地：`PasswordHasher`（libsodium Argon2id，`crypto_pwhash_str` 交互级参数，哈希串 <128 字符合 VARCHAR(255)；临时口令 CSPRNG + 57 字符无歧义字母表 + 拒绝采样消模偏）、`AuthService`（登录统一失败语义不泄露失败原因、首登强制改密闭环、改密含弱口令策略 8~64 位、团支书专属开号/重置/停用/改名且仅可改 display_name、团支书与生活委员活动席位唯一强校验、`BootstrapFirstSecretary` 一次性引导首任团支书并绑定灵活公款存管人、生活委员开立即绑定系报销账户存管人）。基础设施：Neon 新增 `recta-test` 分支（从 production 复制 schema）作集成测试沙箱，`TryLoadTestConnectionString` 读 `RECTA_TEST_DATABASE_URL` / `.env.test.local`（均 gitignored）。测试：Domain 26 + Storage 7 + Core 7（哈希单测 3 + 认证集成 4）全绿；pqxx 改为 Storage 的 PUBLIC 依赖（仓储签名暴露 pqxx::work&）。
 - **2026-09-24 · P3** `Recta.Storage` 落地：`NeonContext`（§7.2 带退避重试，每次尝试全新短连接）、`LoadConnectionString`（DATABASE_URL > RECTA_ENV_FILE > 自 cwd 向上寻 `.env.local`，解析引号/CRLF）、六组仓储（Users / StudentAccounts / EntityAccounts / Request / Ledger）——全部方法接收调用方 `pqxx::work&`，自身不提交，供 P5 组装原子事务；`LockMany`/`Lock`/`LockByType` 封装 `FOR UPDATE` 且按 id 升序确定性加锁。集成冒烟 7 用例对真 Neon 全绿（连接/提交路径、用户全生命周期、分户出入账+守恒三元组+乱序入参的有序锁定、审批单两阶段状态机+分摊明细、入账/流水/change_events、实体账户锁与调额），写路径一律 `tx.abort()` 回滚，库中零残留。工程决策：引入自定义三元组 `x64-windows-static-md` 静态链接 pqxx（规避其 DLL 导出 `std::string_view` 内联成员的 LNK2005）；pqxx 新版 API 全面采用 `tx.exec(sql, pqxx::params{...})` 与模板化行映射。

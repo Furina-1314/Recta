@@ -1,0 +1,32 @@
+# 密钥与本地环境（绝不入库）
+.env.local
+.env.*
+.neon
+
+# AI 工具会话目录
+.claude/
+.zcode/
+skills-lock.json
+
+# ---- 原生 C++ (native/) ----
+native/build/
+native/out/
+*.obj
+*.pdb
+*.ilk
+*.dll
+*.lib
+*.exp
+
+# ---- .NET (desktop/) ----
+desktop/*/bin/
+desktop/*/obj/
+*.user
+.vs/
+artifacts/
+release/
+
+# ---- 常规 ----
+Thumbs.db
+.DS_Store
+*.log

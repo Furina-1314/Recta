@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Documents;
 using Avalonia.Interactivity;
@@ -30,14 +31,18 @@ public partial class RequestsPage : UserControl, IRefreshable
     public RequestsPage()
     {
         InitializeComponent();
-        SubmitPanel.RequestSubmitted += (_, _) => _ = LoadAsync();
-        SubmitPanel.Collapsed += (_, _) => NewRequestHost.IsVisible = false;
         Loaded += (_, _) => _ = LoadAsync();
     }
 
-    private void OnToggleNewRequest(object? sender, RoutedEventArgs e)
+    private async void OnToggleNewRequest(object? sender, RoutedEventArgs e)
     {
-        NewRequestHost.IsVisible = !NewRequestHost.IsVisible;
+        var dialog = new Windows.NewRequestDialog();
+        await dialog.ShowDialog(TopLevel.GetTopLevel(this) as Window
+                                ?? throw new InvalidOperationException());
+        if (dialog.Submitted)
+        {
+            await LoadAsync();
+        }
     }
 
     private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
@@ -96,7 +101,7 @@ public partial class RequestsPage : UserControl, IRefreshable
 
     private RequestRow ToRow(ExpenseRequestDto r) => new(
         r.Id,
-        $"#{r.Id:D3}",
+        $"REQ-{r.Id:D6}",
         r.Title,
         r.AccountCategory,
         CategoryLabel(r.AccountCategory),
@@ -140,8 +145,7 @@ public partial class RequestsPage : UserControl, IRefreshable
         EmptyPanel.IsVisible = false;
         DetailPanel.IsVisible = true;
 
-        var year = r.CreatedAt is { Length: >= 4 } created ? created[..4] : "2026";
-        ReqNoText.Text = $"申请编号 REQ-{year}-{r.Id:D3}";
+        ReqNoText.Text = $"单号 REQ-{r.Id:D6}";
         ReqTitleText.Text = $"{r.Title}({CategoryLabel(r.AccountCategory)})";
         ApplicantText.Text = _userNameById.TryGetValue(r.ApplicantId, out var name) ? name : r.ApplicantId;
 
@@ -350,7 +354,7 @@ public partial class RequestsPage : UserControl, IRefreshable
             "SETTLED" => "RectaPositiveBrush",
             _ => "RectaDangerBrush",
         };
-        return (IBrush)this.FindResource(key)!;
+        return (Application.Current?.FindResource(key) as IBrush) ?? Brushes.Gray;
     }
 
     private void ShowInspectorError(string message)

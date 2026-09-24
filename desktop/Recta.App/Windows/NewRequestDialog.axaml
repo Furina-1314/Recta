@@ -1,0 +1,129 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:local="clr-namespace:Recta.App.Windows"
+        x:Class="Recta.App.Windows.NewRequestDialog"
+        Title="新提单"
+        Width="620" Height="640" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource RectaCanvasBrush}"
+        FontSize="14">
+
+    <ScrollViewer>
+        <StackPanel Margin="28,22" Spacing="12" MaxWidth="560">
+
+            <!-- 类型切换:支出 / 增资 -->
+            <Grid ColumnDefinitions="*,12,*">
+                <Button x:Name="ExpenseTab" Classes="accent" Click="OnTabExpense" FontSize="15">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#xE711;" Classes="icon" />
+                        <TextBlock Text="支出提单" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" x:Name="IncomeTab" Click="OnTabIncome" FontSize="15">
+                    <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="&#xE710;" Classes="icon" />
+                        <TextBlock Text="入账登记" />
+                    </StackPanel>
+                </Button>
+            </Grid>
+
+            <!-- ============ 支出 ============ -->
+            <StackPanel x:Name="ExpensePanel" Spacing="12">
+                <Grid ColumnDefinitions="*,12,2*">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="出资渠道" />
+                        <ComboBox x:Name="ChannelBox" SelectionChanged="OnChannelChanged"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="灵活公款" Tag="FLEXIBLE" />
+                            <ComboBoxItem Content="系里报销" Tag="FACULTY" />
+                            <ComboBoxItem Content="班费平摊" Tag="CLASS_FUND" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="动账事项" />
+                        <TextBox x:Name="TitleBox" Watermark="如:自动化实验耗材采购" />
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,12,2*">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="金额(元)" />
+                        <TextBox x:Name="AmountBox" Classes="money" TextAlignment="Right" Watermark="0.00" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="证明材料链接(可选)" />
+                        <TextBox x:Name="VoucherBox" Watermark="https://…(发票/凭证的照片或文件链接)" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- 班费参摊 -->
+                <StackPanel x:Name="SplitSection" Spacing="10" IsVisible="False">
+                    <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBlock Classes="secondary" FontSize="12"
+                                   Text="参摊同学(勾选)——系统自动平摊,尾差由指定同学承担,分项之和恒等于总额" TextWrapping="Wrap" />
+                        <ComboBox Grid.Column="1" x:Name="TailBearerBox" MinWidth="170"
+                                  AutomationProperties.Name="尾差承担人" />
+                    </Grid>
+                    <ScrollViewer MaxHeight="130" Classes="card" Padding="8">
+                        <ItemsControl x:Name="StudentChecks">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:StudentCheckVm">
+                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                              Content="{Binding Label}" Margin="6,3" FontSize="13" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                    <TextBlock x:Name="SplitPreview" Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="—" />
+                </StackPanel>
+            </StackPanel>
+
+            <!-- ============ 增资 ============ -->
+            <StackPanel x:Name="IncomePanel" Spacing="12" IsVisible="False">
+                <Grid ColumnDefinitions="*,12,2*">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="入账类型" />
+                        <ComboBox x:Name="IncomeKindBox" SelectionChanged="OnIncomeKindChanged"
+                                  HorizontalAlignment="Stretch">
+                            <ComboBoxItem Content="灵活公款增资" Tag="TO_FLEXIBLE_ACCOUNT" />
+                            <ComboBoxItem Content="系报销回款核销" Tag="TO_FACULTY_REIMBURSE" />
+                            <ComboBoxItem Content="同学班费充值" Tag="TO_STUDENT_SUB_ACCOUNT" />
+                        </ComboBox>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="来源说明" />
+                        <TextBox x:Name="IncomeSourceBox" Watermark="如:系财务 9 月经费打款 / 张三班费转账" />
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,12,2*">
+                    <StackPanel Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="金额(元)" />
+                        <TextBox x:Name="IncomeAmountBox" Classes="money" TextAlignment="Right" Watermark="0.00" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="6">
+                        <TextBlock Classes="secondary" FontSize="12" Text="证明材料链接(可选)" />
+                        <TextBox x:Name="IncomeVoucherBox" Watermark="https://…(转账截图/回执链接)" />
+                    </StackPanel>
+                </Grid>
+                <Grid ColumnDefinitions="*,12,2*">
+                    <StackPanel x:Name="IncomeStudentSection" Spacing="6" IsVisible="False">
+                        <TextBlock Classes="secondary" FontSize="12" Text="充值对象" />
+                        <ComboBox x:Name="IncomeStudentBox" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" x:Name="IncomeRequestSection" Spacing="6" IsVisible="False">
+                        <TextBlock Classes="secondary" FontSize="12" Text="关联报销单(必选)" />
+                        <ComboBox x:Name="IncomeRequestBox" HorizontalAlignment="Stretch" />
+                    </StackPanel>
+                </Grid>
+                <TextBlock x:Name="IncomeHint" Classes="secondary" FontSize="12" TextWrapping="Wrap"
+                           Text="灵活公款增资由团支书确认;系报销核销与同学充值由生活委员确认。" />
+            </StackPanel>
+
+            <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap" IsVisible="False" />
+
+            <Button Classes="accent" Content="确认提交" Click="OnSubmit" HorizontalAlignment="Stretch"
+                    Margin="0,4,0,0" />
+
+        </StackPanel>
+    </ScrollViewer>
+</Window>

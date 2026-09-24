@@ -33,14 +33,14 @@
                 </Border>
                 <Border Grid.Column="4" Classes="card">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="代管实存 C_cash" Classes="secondary" />
+                        <TextBlock Text="代管现金" Classes="secondary" />
                         <TextBlock x:Name="CashValue" Classes="money money-value"
                                    Foreground="{DynamicResource RectaPositiveBrush}" Text="—" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="6" Classes="card">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="生委垫资 A_advance" Classes="secondary" />
+                        <TextBlock Text="生委垫资" Classes="secondary" />
                         <TextBlock x:Name="AdvanceValue" Classes="money money-value"
                                    Foreground="{DynamicResource RectaDangerBrush}" Text="—" />
                     </StackPanel>

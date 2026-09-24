@@ -13,9 +13,10 @@ namespace recta::storage {
 // 动账审批单 + 班费分摊明细。
 class RequestRepo {
 public:
-    // 提单入库,返回新单号(PENDING_REVIEW)。
+    // 提单入库,返回新单号(PENDING_REVIEW);voucher_url 为证明材料链接(可空)。
     [[nodiscard]] static int Insert(pqxx::work& tx, const std::string& title, const std::string& category,
-                                    int64_t applied_amount_cents, const std::string& applicant_id);
+                                    int64_t applied_amount_cents, const std::string& applicant_id,
+                                    const std::optional<std::string>& voucher_url = std::nullopt);
 
     [[nodiscard]] static std::optional<ExpenseRequestRow> Find(pqxx::work& tx, int request_id);
     // 行级锁:办结事务必须先锁主单再动账(§8.4)。

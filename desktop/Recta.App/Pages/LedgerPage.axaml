@@ -1,0 +1,146 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Pages"
+             x:Class="Recta.App.Pages.LedgerPage">
+
+    <Grid ColumnDefinitions="*,8,392" Margin="28,24,28,16">
+
+        <!-- 左:余额 + 筛选 + 流水列表 -->
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+
+            <Grid ColumnDefinitions="*,Auto,Auto">
+                <StackPanel Spacing="2">
+                    <TextBlock Classes="page-title" Text="账目" Margin="0" />
+                    <TextBlock Classes="secondary"
+                               Text="全部资金流水的统一台账——支出单据与入账记录,点击任意一条查看完整来龙去脉" />
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="NewEntryButton" VerticalAlignment="Bottom" Margin="0,0,8,0"
+                        Click="OnNewEntry">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="&#xE710;" Classes="icon" />
+                        <TextBlock Text="新提单" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
+
+            <!-- 余额概览 -->
+            <Grid Grid.Row="1" ColumnDefinitions="*,10,*,10,*,10,*" Margin="0,14,0,0">
+                <Border Classes="card" Padding="12,10">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="secondary" FontSize="12" Text="灵活公款余额" />
+                        <TextBlock x:Name="FlexibleValue" Classes="money money-value" Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="2" Classes="card" Padding="12,10">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="secondary" FontSize="12" Text="当前挂账(应收)" />
+                        <TextBlock x:Name="FacultyValue" Classes="money money-value" Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="4" Classes="card" Padding="12,10">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="secondary" FontSize="12" Text="班费代管现金" />
+                        <TextBlock x:Name="CashValue" Classes="money money-value"
+                                   Foreground="{DynamicResource RectaPositiveBrush}" Text="—" />
+                    </StackPanel>
+                </Border>
+                <Border Grid.Column="6" Classes="card" Padding="12,10">
+                    <StackPanel Spacing="4">
+                        <TextBlock Classes="secondary" FontSize="12" Text="生委垫资" />
+                        <TextBlock x:Name="AdvanceValue" Classes="money money-value"
+                                   Foreground="{DynamicResource RectaDangerBrush}" Text="—" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <!-- 高级筛选 -->
+            <Grid Grid.Row="2" Margin="0,12,4,10" ColumnDefinitions="Auto,8,Auto,8,*,8">
+                <ComboBox x:Name="KindFilter" MinWidth="116" SelectionChanged="OnFilterChanged">
+                    <ComboBoxItem Content="全部流水" Tag="" />
+                    <ComboBoxItem Content="支出单据" Tag="EXPENSE" />
+                    <ComboBoxItem Content="班费分户" Tag="CLASS_FUND" />
+                    <ComboBoxItem Content="入账记录" Tag="INCOME" />
+                </ComboBox>
+                <ComboBox Grid.Column="2" x:Name="ChannelFilter" MinWidth="116"
+                          SelectionChanged="OnFilterChanged">
+                    <ComboBoxItem Content="全部渠道" Tag="" />
+                    <ComboBoxItem Content="灵活公款" Tag="FLEXIBLE" />
+                    <ComboBoxItem Content="系里报销" Tag="FACULTY" />
+                    <ComboBoxItem Content="班费平摊" Tag="CLASS_FUND" />
+                </ComboBox>
+                <TextBox Grid.Column="4" x:Name="SearchBox" Watermark="搜索单号、事项或来源…"
+                         TextChanged="OnSearchChanged" />
+            </Grid>
+
+            <!-- 流水列表 -->
+            <Border Grid.Row="3" Classes="card" Padding="0" Margin="0,0,4,0" ClipToBounds="True">
+                <Grid RowDefinitions="Auto,*">
+                    <Border Background="{DynamicResource RectaPaneBrush}"
+                            BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                        <Grid ColumnDefinitions="120,*,112,96,132">
+                            <Grid.Styles>
+                                <Style Selector="TextBlock">
+                                    <Setter Property="FontSize" Value="12" />
+                                    <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                                </Style>
+                            </Grid.Styles>
+                            <TextBlock Text="单号" Margin="14,8,8,8" />
+                            <TextBlock Grid.Column="1" Text="事项 / 来源" Margin="8,8,8,8" />
+                            <TextBlock Grid.Column="2" Text="渠道" Margin="8,8,8,8" />
+                            <TextBlock Grid.Column="3" Text="金额(元)" Classes="money" Margin="8,8,8,8" />
+                            <TextBlock Grid.Column="4" Text="日期" Margin="8,8,12,8" />
+                        </Grid>
+                    </Border>
+                    <ScrollViewer Grid.Row="1">
+                        <ListBox x:Name="Rows" Background="Transparent" Padding="0" SelectionMode="Single"
+                                 SelectionChanged="OnRowSelected">
+                            <ListBox.Styles>
+                                <Style Selector="ListBoxItem">
+                                    <Setter Property="Padding" Value="6,0,0,0" />
+                                    <Setter Property="MinHeight" Value="44" />
+                                </Style>
+                            </ListBox.Styles>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate x:DataType="local:LedgerRowVm">
+                                    <Grid ColumnDefinitions="114,*,112,96,132" MinHeight="44">
+                                        <TextBlock Text="{Binding No}" VerticalAlignment="Center" FontSize="12"
+                                                   Classes="money" Margin="8,0,0,0" TextAlignment="Left" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center"
+                                                   TextTrimming="CharacterEllipsis" Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding ChannelLabel}"
+                                                   VerticalAlignment="Center" FontSize="13" Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding AmountText}" Classes="money"
+                                                   Foreground="{Binding AmountBrush}" VerticalAlignment="Center"
+                                                   Margin="2,0,8,0" />
+                                        <TextBlock Grid.Column="4" Text="{Binding DateText}" VerticalAlignment="Center"
+                                                   FontSize="12" Margin="2,0,8,0" />
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <TextBlock Grid.Row="4" x:Name="SummaryText" Classes="secondary" Margin="0,8,0,0" Text="—" />
+        </Grid>
+
+        <!-- 右:流水详情 -->
+        <Border Grid.Column="2" Classes="card" Padding="0" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+                <Border Padding="20,14" Background="{DynamicResource RectaPaneBrush}"
+                        BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                    <TextBlock Text="流水详情" FontWeight="SemiBold" />
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <StackPanel x:Name="DetailPanel" Margin="20,14" Spacing="10">
+                        <TextBlock Classes="secondary" Text="点击左侧任意一条流水,查看单号、经办过程与证明材料。" TextWrapping="Wrap" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

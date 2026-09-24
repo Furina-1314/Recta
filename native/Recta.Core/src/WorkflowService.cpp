@@ -83,7 +83,8 @@ void AppendChangeEvent(pqxx::work& tx, const char* entity, int64_t entity_id,
 
 int WorkflowService::SubmitRequest(const std::string& applicant_id, const std::string& title,
                                    AccountCategory category, Money applied_amount,
-                                   const std::optional<SplitPlanInput>& split_plan) {
+                                   const std::optional<SplitPlanInput>& split_plan,
+                                   const std::optional<std::string>& voucher_url) {
     if (title.empty() || title.size() > 128) {
         throw std::invalid_argument("动账事项标题必填(1~128 字)");
     }
@@ -104,7 +105,7 @@ int WorkflowService::SubmitRequest(const std::string& applicant_id, const std::s
         }
 
         const int request_id = storage::RequestRepo::Insert(
-            tx, title, ToString(category), applied_amount.to_cents(), applicant_id);
+            tx, title, ToString(category), applied_amount.to_cents(), applicant_id, voucher_url);
 
         if (!allocations.empty()) {
             std::vector<storage::SplitRow> rows;

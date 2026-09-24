@@ -16,27 +16,38 @@ public partial class MainWindow : Window
     [
         ("overview",  "大盘", "\uE80F"),
         ("requests",  "审批", "\uE8A5"),
+        ("ledger",    "账目", "\uE8C7"),
         ("students",  "分户", "\uE716"),
-        ("flexible",  "走账", "\uE8C7"),
-        ("faculty",   "系报", "\uE8F1"),
-        ("inflow",    "入账", "\uE896"),
-        ("budget",    "预算", "\uE8EF"),
         ("audit",     "审计", "\uE81C"),
+        ("users",     "用户", "\uE77B"),
         ("settings",  "设置", "\uE713"),
     ];
 
+    // 按角色可见:账目/分户=团支书+生活委员;审计/用户=团支书;其余全员。
+    private static readonly Dictionary<string, string[]> PageRoles = new()
+    {
+        ["ledger"] = ["BRANCH_SECRETARY", "LIFE_COMMITTEE"],
+        ["students"] = ["BRANCH_SECRETARY", "LIFE_COMMITTEE"],
+        ["audit"] = ["BRANCH_SECRETARY"],
+        ["users"] = ["BRANCH_SECRETARY"],
+    };
+
     private readonly Dictionary<string, UserControl> _pages = new();
-    private readonly ObservableCollection<NavItem> _navItems = new(NavSpec.Select(n => new NavItem(n.Tag, n.Label, n.Glyph)));
+    private readonly ObservableCollection<NavItem> _navItems;
 
     public MainWindow()
     {
         InitializeComponent();
         Branding.ApplyIcon(this);
-        Nav.ItemsSource = _navItems;
 
         var session = AppServices.Session;
         UserNameText.Text = session?.DisplayName ?? "演示模式";
         UserRoleText.Text = session is null ? "SMOKE" : RoleLabel(session.Role);
+        var role = session?.Role ?? "";
+        _navItems = new ObservableCollection<NavItem>(
+            NavSpec.Where(n => !PageRoles.TryGetValue(n.Tag, out var roles) || roles.Contains(role))
+                   .Select(n => new NavItem(n.Tag, n.Label, n.Glyph)));
+        Nav.ItemsSource = _navItems;
 
         // 冒烟模式支持直达指定页(RECTA_SMOKE_PAGE=requests 等)。
         var smokePage = AppServices.SmokePage;
@@ -204,12 +215,10 @@ public partial class MainWindow : Window
     {
         "overview" => new OverviewPage(),
         "requests" => new RequestsPage(),
-        "flexible" => new FlexiblePage(),
-        "faculty" => new FacultyPage(),
+        "ledger" => new LedgerPage(),
         "students" => new StudentsPage(),
-        "inflow" => new InflowPage(),
-        "budget" => new BudgetPage(),
         "audit" => new AuditPage(),
+        "users" => new UsersPage(),
         "settings" => new SettingsPage(),
         _ => new SkeletonPage(tag, "", "\uE7BA"),
     };

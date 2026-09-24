@@ -1,0 +1,109 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Pages"
+             x:Class="Recta.App.Pages.UsersPage">
+
+    <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="28,24,28,16">
+
+        <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="2">
+                <TextBlock Classes="page-title" Text="用户" Margin="0" />
+                <TextBlock Classes="secondary"
+                           Text="班委账号管理——开立账号、分配角色、重置密码与停用启用(仅团支书)" />
+            </StackPanel>
+            <Button Grid.Column="1" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                <TextBlock Text="&#xE72C;" Classes="icon" />
+            </Button>
+        </Grid>
+
+        <!-- 开立账号 -->
+        <Border Grid.Row="1" Classes="card" Margin="0,14,0,0">
+            <StackPanel Spacing="10">
+                <TextBlock Text="开立新账号" FontWeight="SemiBold" />
+                <Grid ColumnDefinitions="*,12,*,12,*,12,Auto">
+                    <TextBox x:Name="NewUsernameBox" Watermark="登录用户名(固定不可改)" />
+                    <TextBox Grid.Column="2" x:Name="NewNameBox" Watermark="姓名 / 职务" />
+                    <ComboBox Grid.Column="4" x:Name="NewRoleBox" HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="职能班委" Tag="CLASS_COMMITTEE" />
+                        <ComboBoxItem Content="生活委员" Tag="LIFE_COMMITTEE" />
+                        <ComboBoxItem Content="团支书" Tag="BRANCH_SECRETARY" />
+                    </ComboBox>
+                    <Button Grid.Column="6" Classes="accent" Content="开立账号" Click="OnCreateUser" />
+                </Grid>
+                <Grid ColumnDefinitions="Auto,12,2*,12,Auto,12,*">
+                    <TextBlock x:Name="TempPasswordLabel" Classes="secondary" FontSize="12"
+                               Text="临时口令(只显示这一次,请立即转交):" IsVisible="False"
+                               VerticalAlignment="Center" />
+                    <TextBox Grid.Column="2" x:Name="TempPasswordBox" IsReadOnly="True" IsVisible="False"
+                             FontFamily="Cascadia Mono,Consolas" FontWeight="SemiBold" />
+                    <Button Grid.Column="4" x:Name="CopyPasswordButton" Content="复制" IsVisible="False"
+                            Click="OnCopyPassword" MinHeight="30" FontSize="12" />
+                    <TextBlock Grid.Column="6" x:Name="UserError" Classes="danger-text" TextWrapping="Wrap"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- 账号列表 -->
+        <Border Grid.Row="2" Classes="card" Padding="0" Margin="0,12,0,0" ClipToBounds="True">
+            <Grid RowDefinitions="Auto,*">
+                <Border Background="{DynamicResource RectaPaneBrush}"
+                        BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                    <Grid ColumnDefinitions="*,160,130,110,120,110,110,110">
+                        <Grid.Styles>
+                            <Style Selector="TextBlock">
+                                <Setter Property="FontSize" Value="12" />
+                                <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                            </Style>
+                        </Grid.Styles>
+                        <TextBlock Text="姓名 / 职务" Margin="14,8,8,8" />
+                        <TextBlock Grid.Column="1" Text="用户名" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="2" Text="角色" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="3" Text="状态" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="4" Text="最后登录" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="5" Text="重置密码" Classes="money" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="6" Text="改名" Classes="money" Margin="8,8,8,8" />
+                        <TextBlock Grid.Column="7" Text="停用 / 启用" Classes="money" Margin="8,8,12,8" />
+                    </Grid>
+                </Border>
+                <ScrollViewer Grid.Row="1">
+                    <ItemsControl x:Name="Rows">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:UserRowVm">
+                                <Border BorderBrush="{DynamicResource RectaDividerBrush}"
+                                        BorderThickness="0,0,0,1">
+                                    <Grid ColumnDefinitions="*,160,130,110,120,110,110,110" MinHeight="46">
+                                        <TextBlock Text="{Binding DisplayName}" VerticalAlignment="Center"
+                                                   Margin="14,0,8,0" FontWeight="SemiBold" />
+                                        <TextBlock Grid.Column="1" Text="{Binding Username}" VerticalAlignment="Center"
+                                                   FontSize="13" Margin="8,0,8,0" />
+                                        <TextBlock Grid.Column="2" Text="{Binding RoleLabel}" VerticalAlignment="Center"
+                                                   Margin="8,0,8,0" />
+                                        <TextBlock Grid.Column="3" Text="{Binding StatusLabel}"
+                                                   Foreground="{Binding StatusBrush}" VerticalAlignment="Center"
+                                                   Margin="8,0,8,0" />
+                                        <TextBlock Grid.Column="4" Text="{Binding LastLogin}" VerticalAlignment="Center"
+                                                   FontSize="12" Margin="8,0,8,0" />
+                                        <Button Grid.Column="5" Content="重置" Click="OnResetPassword" Tag="{Binding}"
+                                                MinHeight="28" FontSize="12" HorizontalAlignment="Center"
+                                                Margin="4,0" />
+                                        <Button Grid.Column="6" Content="改名" Click="OnRename" Tag="{Binding}"
+                                                MinHeight="28" FontSize="12" HorizontalAlignment="Center"
+                                                Margin="4,0" />
+                                        <Button Grid.Column="7" Content="{Binding ToggleLabel}" Click="OnToggleActive"
+                                                Tag="{Binding}" MinHeight="28" FontSize="12"
+                                                Classes.danger="{Binding IsDeactivate}"
+                                                HorizontalAlignment="Center" Margin="4,0,12,0" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <TextBlock Grid.Row="3" x:Name="FooterText" Classes="secondary" Margin="0,8,0,0"
+                   Text="临时口令只显示一次;新账号首次登录将被要求修改口令。团支书与生活委员席位各仅可有一人在任。" />
+    </Grid>
+</UserControl>

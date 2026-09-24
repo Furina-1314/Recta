@@ -57,6 +57,9 @@ internal static partial class RectaNative
     internal static partial int recta_deactivate_user(string actor_id, string target_user_id);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int recta_activate_user(string actor_id, string target_user_id);
+
+    [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
     internal static partial int recta_update_display_name(string actor_id, string target_user_id,
                                                           string display_name);
 
@@ -70,6 +73,7 @@ internal static partial class RectaNative
                                                      string category, long applied_cents,
                                                      string? split_ids_json,
                                                      string? tail_bearer_id,
+                                                     string? voucher_url,
                                                      out int out_request_id);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]

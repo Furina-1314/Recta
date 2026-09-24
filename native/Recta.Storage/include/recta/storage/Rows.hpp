@@ -47,6 +47,7 @@ struct ExpenseRequestRow {
     std::string status; // 'PENDING_REVIEW' | 'APPROVED' | 'SETTLED' | 'REJECTED'
     std::optional<std::string> review_notes;
     std::optional<std::string> settlement_notes;
+    std::optional<std::string> voucher_url;      // 证明材料链接
     std::optional<std::string> created_at;
     std::optional<std::string> reviewed_at;
     std::optional<std::string> settled_at;

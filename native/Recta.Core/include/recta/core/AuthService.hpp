@@ -50,6 +50,8 @@ public:
     // 重置他人密码为新的临时密码,置 must_change_password。
     [[nodiscard]] std::string ResetPassword(const std::string& actor_id, const std::string& target_user_id);
     void DeactivateUser(const std::string& actor_id, const std::string& target_user_id);
+    // 重新启用已停用账号(席位唯一校验同样生效)。
+    void ActivateUser(const std::string& actor_id, const std::string& target_user_id);
     void UpdateDisplayName(const std::string& actor_id, const std::string& target_user_id,
                            const std::string& display_name);
 

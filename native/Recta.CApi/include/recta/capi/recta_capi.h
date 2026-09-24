@@ -65,6 +65,7 @@ RECTA_API int32_t recta_create_user(const char* actor_id, const char* new_user_i
 RECTA_API int32_t recta_reset_password(const char* actor_id, const char* target_user_id,
                                        char* buf, int32_t cap /*临时口令*/);
 RECTA_API int32_t recta_deactivate_user(const char* actor_id, const char* target_user_id);
+RECTA_API int32_t recta_activate_user(const char* actor_id, const char* target_user_id);
 RECTA_API int32_t recta_update_display_name(const char* actor_id, const char* target_user_id,
                                             const char* display_name);
 RECTA_API int32_t recta_bootstrap_secretary(const char* username, const char* display_name,
@@ -75,7 +76,7 @@ RECTA_API int32_t recta_bootstrap_secretary(const char* username, const char* di
 RECTA_API int32_t recta_submit_request(const char* actor_id, const char* title,
                                        const char* category, int64_t applied_cents,
                                        const char* split_ids_json, const char* tail_bearer_id,
-                                       int32_t* out_request_id);
+                                       const char* voucher_url, int32_t* out_request_id);
 RECTA_API int32_t recta_approve_request(const char* actor_id, int32_t request_id,
                                         int64_t approved_cents, const char* notes /*可空*/);
 RECTA_API int32_t recta_reject_request(const char* actor_id, int32_t request_id,

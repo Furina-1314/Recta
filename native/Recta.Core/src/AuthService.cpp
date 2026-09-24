@@ -165,6 +165,28 @@ void AuthService::DeactivateUser(const std::string& actor_id, const std::string&
     });
 }
 
+void AuthService::ActivateUser(const std::string& actor_id, const std::string& target_user_id) {
+    context_.ExecuteTransaction([&](pqxx::work& tx) {
+        RequireSecretary(tx, actor_id);
+        const auto target = storage::UsersRepo::FindById(tx, target_user_id);
+        if (!target) {
+            throw std::invalid_argument("目标账号不存在: " + target_user_id);
+        }
+        if (target->is_active) {
+            return 0;
+        }
+        // 席位唯一(§1):重启团支书/生活委员席位前确认无在任者。
+        if ((target->role == "BRANCH_SECRETARY" || target->role == "LIFE_COMMITTEE") &&
+            CountActiveRoleHolders(tx, target->role) > 0) {
+            throw std::invalid_argument(target->role == "BRANCH_SECRETARY"
+                                            ? "团支书席位已有在任者，不可重复启用"
+                                            : "生活委员席位已有在任者，不可重复启用");
+        }
+        storage::UsersRepo::SetActive(tx, target_user_id, true);
+        return 0;
+    });
+}
+
 void AuthService::UpdateDisplayName(const std::string& actor_id, const std::string& target_user_id,
                                     const std::string& display_name) {
     if (display_name.empty()) throw std::invalid_argument("姓名不能为空");

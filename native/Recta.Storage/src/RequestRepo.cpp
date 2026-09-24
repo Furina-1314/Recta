@@ -9,7 +9,7 @@ namespace {
 
 constexpr auto kColumns =
     "id, title, account_category, applied_amount_cents, approved_amount_cents, settled_amount_cents, "
-    "applicant_id, reviewer_id, settler_id, status, review_notes, settlement_notes, "
+    "applicant_id, reviewer_id, settler_id, status, review_notes, settlement_notes, voucher_url, "
     "created_at, reviewed_at, settled_at";
 
 template <typename RowT>
@@ -27,6 +27,7 @@ ExpenseRequestRow MapRow(const RowT& row) {
     request.status = row["status"].as<std::string>();
     request.review_notes = row["review_notes"].as<std::optional<std::string>>();
     request.settlement_notes = row["settlement_notes"].as<std::optional<std::string>>();
+    request.voucher_url = row["voucher_url"].as<std::optional<std::string>>();
     request.created_at = row["created_at"].as<std::optional<std::string>>();
     request.reviewed_at = row["reviewed_at"].as<std::optional<std::string>>();
     request.settled_at = row["settled_at"].as<std::optional<std::string>>();
@@ -36,11 +37,12 @@ ExpenseRequestRow MapRow(const RowT& row) {
 } // namespace
 
 int RequestRepo::Insert(pqxx::work& tx, const std::string& title, const std::string& category,
-                        int64_t applied_amount_cents, const std::string& applicant_id) {
+                        int64_t applied_amount_cents, const std::string& applicant_id,
+                        const std::optional<std::string>& voucher_url) {
     const auto result = tx.exec(
-        "INSERT INTO expense_requests (title, account_category, applied_amount_cents, applicant_id) "
-        "VALUES ($1, $2, $3, $4) RETURNING id",
-        pqxx::params(title, category, applied_amount_cents, applicant_id));
+        "INSERT INTO expense_requests (title, account_category, applied_amount_cents, applicant_id, voucher_url) "
+        "VALUES ($1, $2, $3, $4, $5) RETURNING id",
+        pqxx::params(title, category, applied_amount_cents, applicant_id, voucher_url));
     return result.front()[0].as<int>();
 }
 

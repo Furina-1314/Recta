@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -6,14 +7,18 @@ using Recta.App.NativeInterop;
 namespace Recta.App.Pages;
 
 public sealed record StudentRowVm(
-    string StudentId, string Name, long BalanceCents, string BalanceText, IBrush BalanceBrush,
-    string RechargedText, string SpentText);
+    string StudentId, string Name, long BalanceCents, string BalanceText, IBrush BalanceBrush);
 
 public sealed record LedgerLineVm(
     string TypeLabel, IBrush TypeBrush, string Note, string ChangeText, string BalanceText);
 
 public partial class StudentsPage : UserControl, IRefreshable
 {
+    // 主题画刷统一取用:控制级 FindResource 在部分时机返回 UnsetValue,
+    // 改走 Application 资源并提供灰兜底。
+    private IBrush ThemeBrush(string key) =>
+        (Application.Current?.FindResource(key) as IBrush) ?? Brushes.Gray;
+
     public StudentsPage()
     {
         InitializeComponent();
@@ -50,10 +55,8 @@ public partial class StudentsPage : UserControl, IRefreshable
                 s.StudentId, s.Name, s.BalanceCents,
                 RectaClient.FormatMoney(s.BalanceCents),
                 s.BalanceCents < 0
-                    ? (IBrush)this.FindResource("RectaDangerBrush")!
-                    : (IBrush)this.FindResource("RectaTextPrimaryBrush")!,
-                RectaClient.FormatMoney(s.TotalRechargedCents),
-                RectaClient.FormatMoney(s.TotalSpentCents))).ToList();
+                    ? ThemeBrush("RectaDangerBrush")
+                    : ThemeBrush("RectaTextPrimaryBrush"))).ToList();
 
             var overdrawn = students.Where(s => s.BalanceCents < 0)
                 .OrderBy(s => s.BalanceCents)
@@ -89,8 +92,8 @@ public partial class StudentsPage : UserControl, IRefreshable
             LedgerList.ItemsSource = entries.Select(entry => new LedgerLineVm(
                 TypeLabel(entry.EntryType),
                 entry.ChangeCents >= 0
-                    ? (IBrush)this.FindResource("RectaPositiveBrush")!
-                    : (IBrush)this.FindResource("RectaDangerBrush")!,
+                    ? ThemeBrush("RectaPositiveBrush")
+                    : ThemeBrush("RectaDangerBrush"),
                 entry.Notes ?? "",
                 (entry.ChangeCents > 0 ? "+" : "") + RectaClient.FormatMoney(entry.ChangeCents),
                 RectaClient.FormatMoney(entry.BalanceAfterCents))).ToList();

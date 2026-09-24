@@ -249,6 +249,7 @@ json RequestJson(const recta::storage::ExpenseRequestRow& r) {
         {"status", r.status},
         {"review_notes", OptJson(r.review_notes)},
         {"settlement_notes", OptJson(r.settlement_notes)},
+        {"voucher_url", OptJson(r.voucher_url)},
         {"created_at", OptJson(r.created_at)},
         {"reviewed_at", OptJson(r.reviewed_at)},
         {"settled_at", OptJson(r.settled_at)},
@@ -476,6 +477,13 @@ int32_t recta_deactivate_user(const char* actor_id, const char* target_user_id) 
     });
 }
 
+int32_t recta_activate_user(const char* actor_id, const char* target_user_id) {
+    return Call([&] {
+        RequireReady();
+        Svc()->auth->ActivateUser(ReqStr(actor_id), ReqStr(target_user_id));
+    });
+}
+
 int32_t recta_update_display_name(const char* actor_id, const char* target_user_id,
                                   const char* display_name) {
     return Call([&] {
@@ -496,7 +504,8 @@ int32_t recta_bootstrap_secretary(const char* username, const char* display_name
 
 int32_t recta_submit_request(const char* actor_id, const char* title, const char* category,
                              int64_t applied_cents, const char* split_ids_json,
-                             const char* tail_bearer_id, int32_t* out_request_id) {
+                             const char* tail_bearer_id, const char* voucher_url,
+                             int32_t* out_request_id) {
     return Call([&] {
         RequireReady();
         if (out_request_id == nullptr) throw std::invalid_argument("out_request_id 为空");
@@ -514,7 +523,8 @@ int32_t recta_submit_request(const char* actor_id, const char* title, const char
         }
         *out_request_id = Svc()->workflow->SubmitRequest(ReqStr(actor_id), ReqStr(title),
                                                       ParseCategory(category),
-                                                      recta::Money(applied_cents), plan);
+                                                      recta::Money(applied_cents), plan,
+                                                      OptStr(voucher_url));
     });
 }
 

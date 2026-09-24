@@ -87,6 +87,11 @@ public sealed class RectaClient
         Check(RectaNative.recta_deactivate_user(actorId, targetUserId));
     }
 
+    public void ActivateUser(string actorId, string targetUserId)
+    {
+        Check(RectaNative.recta_activate_user(actorId, targetUserId));
+    }
+
     public void UpdateDisplayName(string actorId, string targetUserId, string displayName)
     {
         Check(RectaNative.recta_update_display_name(actorId, targetUserId, displayName));
@@ -102,11 +107,11 @@ public sealed class RectaClient
 
     public int SubmitRequest(string actorId, string title, string category, long appliedCents,
                              IReadOnlyList<string>? splitParticipantIds = null,
-                             string? tailBearerId = null)
+                             string? tailBearerId = null, string? voucherUrl = null)
     {
         var idsJson = splitParticipantIds is null ? null : JsonSerializer.Serialize(splitParticipantIds);
         var rc = RectaNative.recta_submit_request(actorId, title, category, appliedCents, idsJson,
-                                                  tailBearerId, out var requestId);
+                                                  tailBearerId, voucherUrl, out var requestId);
         return rc >= 0 ? requestId : throw ToException(rc);
     }
 

@@ -29,14 +29,14 @@
                 </Border>
                 <Border Grid.Column="2" Classes="card" Padding="12,10">
                     <StackPanel Spacing="4">
-                        <TextBlock Classes="secondary" FontSize="12" Text="代管实存 C_cash" />
+                        <TextBlock Classes="secondary" FontSize="12" Text="代管现金" />
                         <TextBlock x:Name="CashValue" Classes="money money-value"
                                    Foreground="{DynamicResource RectaPositiveBrush}" Text="—" />
                     </StackPanel>
                 </Border>
                 <Border Grid.Column="4" Classes="card" Padding="12,10">
                     <StackPanel Spacing="4">
-                        <TextBlock Classes="secondary" FontSize="12" Text="生委垫资 A_advance" />
+                        <TextBlock Classes="secondary" FontSize="12" Text="生委垫资" />
                         <TextBlock x:Name="AdvanceValue" Classes="money money-value"
                                    Foreground="{DynamicResource RectaDangerBrush}" Text="—" />
                     </StackPanel>
@@ -72,7 +72,7 @@
                 <Grid RowDefinitions="Auto,*">
                     <Border Background="{DynamicResource RectaPaneBrush}"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
-                        <Grid ColumnDefinitions="120,*,140,140,140">
+                        <Grid ColumnDefinitions="140,*,180">
                             <Grid.Styles>
                                 <Style Selector="TextBlock">
                                     <Setter Property="FontSize" Value="12" />
@@ -82,8 +82,6 @@
                             <TextBlock Text="学号" Margin="14,8,8,8" />
                             <TextBlock Grid.Column="1" Text="姓名" Margin="8,8,8,8" />
                             <TextBlock Grid.Column="2" Text="余额(元)" Classes="money" Margin="8,8,14,8" />
-                            <TextBlock Grid.Column="3" Text="累计充值(元)" Classes="money" Margin="8,8,8,8" />
-                            <TextBlock Grid.Column="4" Text="累计支出(元)" Classes="money" Margin="8,8,8,8" />
                         </Grid>
                     </Border>
                     <ScrollViewer Grid.Row="1">
@@ -97,18 +95,14 @@
                             </ListBox.Styles>
                             <ListBox.ItemTemplate>
                                 <DataTemplate x:DataType="local:StudentRowVm">
-                                    <Grid ColumnDefinitions="114,*,140,140,140" MinHeight="42">
+                                    <Grid ColumnDefinitions="134,*,180" MinHeight="42">
                                         <TextBlock Text="{Binding StudentId}" VerticalAlignment="Center"
                                                    FontSize="13" Margin="8,0,0,0" />
                                         <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center"
                                                    Margin="2,0,8,0" />
                                         <TextBlock Grid.Column="2" Text="{Binding BalanceText}" Classes="money"
                                                    Foreground="{Binding BalanceBrush}" VerticalAlignment="Center"
-                                                   Margin="2,0,8,0" />
-                                        <TextBlock Grid.Column="3" Text="{Binding RechargedText}" Classes="money"
-                                                   VerticalAlignment="Center" Margin="2,0,8,0" />
-                                        <TextBlock Grid.Column="4" Text="{Binding SpentText}" Classes="money"
-                                                   VerticalAlignment="Center" Margin="2,0,8,0" />
+                                                   Margin="2,0,14,0" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>

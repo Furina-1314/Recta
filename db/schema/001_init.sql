@@ -54,6 +54,7 @@ CREATE TABLE expense_requests (
 
     review_notes TEXT,                             -- 审批核减理由
     settlement_notes TEXT,                         -- 办结批复与自动垫资说明
+    voucher_url TEXT,                              -- 证明材料链接(增补列,见 002)
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     reviewed_at TIMESTAMPTZ,

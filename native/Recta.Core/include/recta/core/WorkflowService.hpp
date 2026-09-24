@@ -68,7 +68,8 @@ public:
     // 提单(任何在册启用账号可提,§5.1)。班费渠道必须携带平摊名单与尾差承担人。
     [[nodiscard]] int SubmitRequest(const std::string& applicant_id, const std::string& title,
                                     AccountCategory category, Money applied_amount,
-                                    const std::optional<SplitPlanInput>& split_plan);
+                                    const std::optional<SplitPlanInput>& split_plan,
+                                    const std::optional<std::string>& voucher_url = std::nullopt);
 
     // 审批:approved < applied 即核减(核减理由必填);approved == applied 全额批准。
     void ApproveRequest(const std::string& actor_id, int request_id, Money approved_amount,

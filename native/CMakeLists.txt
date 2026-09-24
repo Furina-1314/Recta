@@ -18,8 +18,10 @@ option(RECTA_BUILD_TESTS "Build Recta unit tests" ON)
 # 模块依赖方向(禁止循环):
 # Domain <- Storage <- Core <- CApi <- (tests)
 add_subdirectory(Recta.Domain)
+add_subdirectory(Recta.Storage)
 
 if(RECTA_BUILD_TESTS)
     enable_testing()
     add_subdirectory(Recta.Domain.Tests)
+    add_subdirectory(Recta.Storage.Tests)
 endif()

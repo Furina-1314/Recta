@@ -3,7 +3,7 @@
 本档是 [Vibe.md](Vibe.md) 的执行进度与工程决策记录。规范以 Vibe.md 为唯一真理基准；本档记录"做到哪了、怎么落的"。
 
 - **最后更新**：2026-09-24
-- **当前阶段**：P1 完成 / P2 完成，下一步 P3（存储层与 Neon 抗休眠执行器）
+- **当前阶段**：P3 完成，下一步 P4（身份认证：Argon2id、登录、强制改密、账号管理）
 - **仓库**：https://github.com/Furina-1314/Recta
 
 ---
@@ -17,7 +17,7 @@
 | 核心业务 | **C++20（MSVC 14.44，CMake 3.24+）** | `Recta.Domain`（纯计算内核）→ `Recta.Storage`（pqxx）→ `Recta.Core`（服务层）→ `Recta.CApi`（C ABI DLL），依赖方向禁止循环 |
 | 数值 | `int64_t` 定点分，`Money` 强类型 | 全链路禁用浮点；前端只收定点字符串或整数分 |
 | 数据库 | **Neon PostgreSQL**（项目 `misty-bar-36297499`，分支 `production`） | 连接串取自 `.env.local`（不入库）；金额一律 `BIGINT` 分 |
-| 依赖管理 | vcpkg manifest（`E:\code\vcpkg`） | 已验证端口：`gtest`、`libpq`、`libpqxx` |
+| 依赖管理 | vcpkg manifest（`E:\code\vcpkg`） | 自定义三元组 `native/triplets/x64-windows-static-md`（静态库 + 动态 CRT /MD）：pqxx 以 DLL 构建会导出 `zview` 基类 `std::string_view` 的内联成员，与消费方静态库产生 LNK2005，故 libpqxx/libpq/openssl 全静态链接 |
 | 版本管理 | GitHub `Furina-1314/Recta`，阶段完成即提交 | gh 已认证（ssh 协议） |
 
 **构建环境（本机已验证）**：dotnet SDK 10.0.401 · CMake 4.4.3 · MSVC 14.44.35207（BuildTools）· vcpkg · git 2.53。
@@ -68,7 +68,7 @@
 | **P0** | 仓库基线：目录结构、.gitignore、README、清理脚手架残留、GitHub 推送 | ✅ 完成 | 远端可见首提 |
 | **P1** | C++ 领域层：`Money`、尾差平摊 `DistributeExpense`、垫资增量 Δadvance、对账守恒 Σb=C−A、RBAC 硬约束、状态/渠道枚举；gtest 单测 | ✅ 完成 | MSVC+CMake 构建，ctest 全绿 |
 | **P2** | 数据库 DDL 落地：Vibe.md §6 全部 8 表于 Neon `production` 分支 | ✅ 完成 | MCP describe 确认表结构与列类型 |
-| **P3** | 存储层：`NeonContext` 抗休眠重试执行器（§7.2）、.env.local 连接装载、各表仓储（含 `FOR UPDATE` 行锁封装） | ⬜ 未开始 | C++ 冒烟测试对 Neon 读写往返成功 |
+| **P3** | 存储层：`NeonContext` 抗休眠重试执行器（§7.2）、.env.local 连接装载、各表仓储（含 `FOR UPDATE` 行锁封装） | ✅ 完成 | C++ 冒烟测试对 Neon 读写往返成功 |
 | **P4** | 身份认证：Argon2id 口令哈希、登录、首登强制改密、团支书账号管理（开立/停用/重置临时密码） | ⬜ 未开始 | 服务层单测 + 真库冒烟 |
 | **P5** | 业务服务层：两阶段流转（审批/核减/驳回/办结原子事务闭环 §8.4）、入账引擎三通道、流水与 change_events 写入、守恒断言入库前强校验 | ⬜ 未开始 | 集成测试：平摊扣款后 Σb=C−A 恒等 |
 | **P6** | C ABI 导出层 `recta_capi.dll` + C# NativeInterop（P/Invoke + DTO） | ⬜ 未开始 | C# 侧往返调用领域函数成功 |
@@ -94,8 +94,11 @@ Recta/
    ├─ CMakeLists.txt
    ├─ CMakePresets.json
    ├─ vcpkg.json
+   ├─ triplets/x64-windows-static-md.cmake   # 静态库+动态 CRT 三元组
    ├─ Recta.Domain/         # 纯计算内核：Money/平摊/垫资/守恒/RBAC
-   └─ Recta.Domain.Tests/   # gtest
+   ├─ Recta.Domain.Tests/   # gtest
+   ├─ Recta.Storage/        # pqxx 存储：NeonContext/EnvConfig/六组仓储
+   └─ Recta.Storage.Tests/  # 回滚式真库集成冒烟
 （desktop/ 自 P6/P7 起建立：Recta.App / Recta.App.NativeInterop / Recta.App.ViewModels / Recta.slnx）
 ```
 
@@ -104,3 +107,4 @@ Recta/
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
 - **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。
 - **2026-09-24 · P2** Neon `production` 分支执行 §6 全套 DDL：8 表创建成功（users / accounts / student_personal_accounts / expense_requests / expense_splits / inflow_records / account_ledger_entries / change_events），逐表核验列名与类型（金额列均为 `BIGINT`）。DDL 同步落盘 `db/schema/001_init.sql` 供复现。账号种子数据（users / 两实体账户）延至 P4 身份认证阶段一并处理。
+- **2026-09-24 · P3** `Recta.Storage` 落地：`NeonContext`（§7.2 带退避重试，每次尝试全新短连接）、`LoadConnectionString`（DATABASE_URL > RECTA_ENV_FILE > 自 cwd 向上寻 `.env.local`，解析引号/CRLF）、六组仓储（Users / StudentAccounts / EntityAccounts / Request / Ledger）——全部方法接收调用方 `pqxx::work&`，自身不提交，供 P5 组装原子事务；`LockMany`/`Lock`/`LockByType` 封装 `FOR UPDATE` 且按 id 升序确定性加锁。集成冒烟 7 用例对真 Neon 全绿（连接/提交路径、用户全生命周期、分户出入账+守恒三元组+乱序入参的有序锁定、审批单两阶段状态机+分摊明细、入账/流水/change_events、实体账户锁与调额），写路径一律 `tx.abort()` 回滚，库中零残留。工程决策：引入自定义三元组 `x64-windows-static-md` 静态链接 pqxx（规避其 DLL 导出 `std::string_view` 内联成员的 LNK2005）；pqxx 新版 API 全面采用 `tx.exec(sql, pqxx::params{...})` 与模板化行映射。

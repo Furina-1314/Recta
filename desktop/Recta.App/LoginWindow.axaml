@@ -10,8 +10,11 @@
     <ScrollViewer>
         <StackPanel Margin="40,48" Spacing="14" MaxWidth="360">
 
-            <TextBlock Text="RECTA" FontSize="26" LetterSpacing="180" FontWeight="SemiBold"
-                       Foreground="{DynamicResource RectaAccentBrush}" />
+            <StackPanel Orientation="Horizontal" Spacing="12" Margin="0,0,0,2">
+                <Image Width="40" Height="40" Source="avares://Recta.App/Assets/RectaLogo-256.png" />
+                <TextBlock Text="RECTA" FontSize="26" LetterSpacing="3" VerticalAlignment="Center"
+                           Foreground="{DynamicResource RectaAccentBrush}" />
+            </StackPanel>
             <TextBlock Text="矩衡 · 班委财务审批与分户账管理系统" Classes="secondary"
                        Margin="0,0,0,20" TextWrapping="Wrap" />
 

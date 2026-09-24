@@ -10,7 +10,13 @@
     <LangVersion>latest</LangVersion>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <ApplicationIcon>Assets\Recta.ico</ApplicationIcon>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\RectaLogo-256.png" />
+    <AvaloniaResource Include="Assets\RectaLogo.svg" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.*" />

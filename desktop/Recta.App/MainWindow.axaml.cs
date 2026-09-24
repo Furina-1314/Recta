@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        Branding.ApplyIcon(this);
         Nav.ItemsSource = _navItems;
 
         var session = AppServices.Session;

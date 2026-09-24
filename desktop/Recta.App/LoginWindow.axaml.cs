@@ -11,6 +11,7 @@ public partial class LoginWindow : Window
     public LoginWindow()
     {
         InitializeComponent();
+        Branding.ApplyIcon(this);
         Loaded += async (_, _) => await DetectFirstRunAsync();
         if (AppServices.SmokeMode && Environment.GetEnvironmentVariable("RECTA_SMOKE_LOGIN") == "1")
         {

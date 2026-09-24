@@ -30,13 +30,17 @@
                     <!-- 品牌区 -->
                     <Border DockPanel.Dock="Top" Height="64"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
-                        <StackPanel Orientation="Horizontal" Spacing="14" VerticalAlignment="Center" Margin="6,0">
+                        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center" Margin="6,0">
                             <Button Width="44" MinWidth="0" MinHeight="0" Padding="0" Margin="0"
                                     Background="Transparent" BorderThickness="0"
                                     Click="OnTogglePane" AutomationProperties.Name="展开或收起导航">
                                 <TextBlock Text="&#xE700;" Classes="icon" FontSize="18" />
                             </Button>
-                            <TextBlock Text="RECTA" FontSize="15" LetterSpacing="140" FontWeight="SemiBold"
+                            <Image Width="20" Height="20"
+                                   Source="avares://Recta.App/Assets/RectaLogo-256.png"
+                                   VerticalAlignment="Center" />
+                            <!-- 排印对齐 EQUORA:18px、约 0.12em 字距(Avalonia LetterSpacing 单位为 DIU,非 WinUI 千分 em) -->
+                            <TextBlock Text="RECTA" FontSize="18" LetterSpacing="2"
                                        VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>

@@ -46,7 +46,7 @@ public partial class SettingsPage : UserControl
         var session = AppServices.Session;
         if (session is null)
         {
-            PasswordResultText.Foreground = this.FindResource("RectaDangerBrush") as IBrush;
+            PasswordResultText.Foreground = Application.Current?.FindResource("RectaDangerBrush") as IBrush;
             PasswordResultText.Text = "演示模式,不可修改。";
             return;
         }
@@ -55,14 +55,14 @@ public partial class SettingsPage : UserControl
         {
             await ConnectionGate.RunAsync(() => AppServices.Client.ChangePassword(
                 session.UserId, OldPasswordBox.Text ?? "", NewPasswordBox.Text ?? ""));
-            PasswordResultText.Foreground = this.FindResource("RectaPositiveBrush") as IBrush;
+            PasswordResultText.Foreground = Application.Current?.FindResource("RectaPositiveBrush") as IBrush;
             PasswordResultText.Text = "口令已修改。";
             OldPasswordBox.Text = "";
             NewPasswordBox.Text = "";
         }
         catch (RectaException ex)
         {
-            PasswordResultText.Foreground = this.FindResource("RectaDangerBrush") as IBrush;
+            PasswordResultText.Foreground = Application.Current?.FindResource("RectaDangerBrush") as IBrush;
             PasswordResultText.Text = ConnectionGate.Friendly(ex);
         }
     }

@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -38,14 +39,21 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             FooterText.Text = $"加载失败:{ConnectionGate.Friendly(ex)}";
         }
+        catch (Exception ex)
+        {
+            FooterText.Text = $"加载异常:{ex.Message}";
+        }
     }
+
+    private IBrush ThemeBrush(string key) =>
+        (Application.Current?.FindResource(key) as IBrush) ?? Brushes.Gray;
 
     private UserRowVm ToRow(UserDto u) => new(
         u.Id, u.DisplayName, u.Username, RoleLabel(u.Role),
         u.IsActive ? "启用" : "已停用",
         u.IsActive
-            ? (IBrush)this.FindResource("RectaPositiveBrush")!
-            : (IBrush)this.FindResource("RectaPendingBrush")!,
+            ? ThemeBrush("RectaPositiveBrush")
+            : ThemeBrush("RectaPendingBrush"),
         u.LastLoginAt is { Length: >= 10 } t ? t[..10] : "从未登录",
         u.IsActive ? "停用" : "启用",
         u.IsActive);
@@ -103,6 +111,10 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             ShowError(ConnectionGate.Friendly(ex));
         }
+        catch (Exception ex)
+        {
+            ShowError($"操作异常:{ex.Message}");
+        }
     }
 
     private async void OnCopyPassword(object? sender, RoutedEventArgs e)
@@ -130,6 +142,10 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             ShowError(ConnectionGate.Friendly(ex));
         }
+        catch (Exception ex)
+        {
+            ShowError($"操作异常:{ex.Message}");
+        }
     }
 
     private async void OnRename(object? sender, RoutedEventArgs e)
@@ -156,6 +172,10 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             ShowError(ConnectionGate.Friendly(ex));
         }
+        catch (Exception ex)
+        {
+            ShowError($"操作异常:{ex.Message}");
+        }
     }
 
     private async void OnToggleActive(object? sender, RoutedEventArgs e)
@@ -181,6 +201,10 @@ public partial class UsersPage : UserControl, IRefreshable
         catch (RectaException ex)
         {
             ShowError(ConnectionGate.Friendly(ex));
+        }
+        catch (Exception ex)
+        {
+            ShowError($"操作异常:{ex.Message}");
         }
     }
 

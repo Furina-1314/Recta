@@ -342,7 +342,7 @@ public partial class LedgerPage : UserControl, IRefreshable
     {
         DetailPanel.Children.Add(new Border
         {
-            Height = 1, Background = (IBrush)this.FindResource("RectaDividerBrush")!, Margin = new Thickness(0, 4),
+            Height = 1, Background = ThemeBrush("RectaDividerBrush"), Margin = new Thickness(0, 4),
         });
     }
 
@@ -357,7 +357,7 @@ public partial class LedgerPage : UserControl, IRefreshable
         var badgeBorder = new Border
         {
             Padding = new Thickness(10, 3),
-            Background = (IBrush)this.FindResource(brushKey)!,
+            Background = ThemeBrush(brushKey),
             VerticalAlignment = VerticalAlignment.Center,
         };
         badgeBorder.Child = new TextBlock

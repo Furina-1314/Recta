@@ -18,6 +18,11 @@
     <AvaloniaResource Include="Assets\RectaLogo.svg" />
   </ItemGroup>
 
+  <!-- 安装包/分发用图标文件(嵌入 exe 之外同时随载荷携带) -->
+  <ItemGroup>
+    <Content Include="Assets\Recta.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="11.3.*" />
     <PackageReference Include="Avalonia.Desktop" Version="11.3.*" />

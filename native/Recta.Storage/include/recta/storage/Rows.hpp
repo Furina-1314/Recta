@@ -57,6 +57,7 @@ struct SplitRow {
     int64_t amount_cents = 0;
     bool is_tail_bearer = false;
     int64_t advance_cents = 0; // Δadvance:本次生委垫资
+    std::optional<std::string> student_name; // 联查姓名(Inspector 展示),仓储读取时填充
 };
 
 struct RequestFilter {

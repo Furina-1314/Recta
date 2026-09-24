@@ -131,14 +131,18 @@ void RequestRepo::ReplaceSplits(pqxx::work& tx, int request_id, const std::vecto
 
 std::vector<SplitRow> RequestRepo::ListSplits(pqxx::work& tx, int request_id) {
     const auto result = tx.exec(
-        "SELECT student_id, amount_cents, is_tail_bearer, advance_cents "
-        "FROM expense_splits WHERE request_id = $1 ORDER BY id",
+        "SELECT sp.student_id, sa.name AS student_name, sp.amount_cents, sp.is_tail_bearer, "
+        "       sp.advance_cents "
+        "FROM expense_splits sp "
+        "LEFT JOIN student_personal_accounts sa ON sa.student_id = sp.student_id "
+        "WHERE sp.request_id = $1 ORDER BY sp.id",
         pqxx::params(request_id));
     std::vector<SplitRow> splits;
     splits.reserve(static_cast<std::size_t>(result.size()));
     for (const auto& row : result) {
         SplitRow split;
         split.student_id = row["student_id"].as<std::string>();
+        split.student_name = row["student_name"].as<std::optional<std::string>>();
         split.amount_cents = row["amount_cents"].as<int64_t>();
         split.is_tail_bearer = row["is_tail_bearer"].as<bool>();
         split.advance_cents = row["advance_cents"].as<int64_t>();

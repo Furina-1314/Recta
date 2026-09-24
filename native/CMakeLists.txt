@@ -20,6 +20,7 @@ option(RECTA_BUILD_TESTS "Build Recta unit tests" ON)
 add_subdirectory(Recta.Domain)
 add_subdirectory(Recta.Storage)
 add_subdirectory(Recta.Core)
+add_subdirectory(Recta.CApi)
 
 if(RECTA_BUILD_TESTS)
     enable_testing()

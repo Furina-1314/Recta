@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <RootNamespace>Recta.App.NativeInterop.Tests</RootNamespace>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <!-- 测试内亦含 LibraryImport 声明(dev 工具直连) -->
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Recta.App.NativeInterop\Recta.App.NativeInterop.csproj" />
+  </ItemGroup>
+
+  <!-- 原生 DLL 存在时随测试输出(先构建 native/,后 dotnet test)。 -->
+  <ItemGroup Condition="Exists('..\..\native\build\win-x64-release\Recta.CApi\Release\recta_capi.dll')">
+    <Content Include="..\..\native\build\win-x64-release\Recta.CApi\Release\recta_capi.dll"
+             Link="recta_capi.dll" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,46 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Controls"
+             x:Class="Recta.App.Controls.ChannelRequestList">
+
+    <Border Classes="card" Padding="0" ClipToBounds="True">
+        <Grid RowDefinitions="Auto,*">
+            <Border Background="{DynamicResource RectaPaneBrush}"
+                    BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                <Grid ColumnDefinitions="76,*,132,92" Margin="0,2">
+                    <Grid.Styles>
+                        <Style Selector="TextBlock">
+                            <Setter Property="FontSize" Value="12" />
+                            <Setter Property="Foreground" Value="{DynamicResource RectaTextSecondaryBrush}" />
+                        </Style>
+                    </Grid.Styles>
+                    <TextBlock Text="编号" Margin="14,8,8,8" />
+                    <TextBlock Grid.Column="1" Text="动账事项" Margin="8,8,8,8" />
+                    <TextBlock Grid.Column="2" Text="金额(元)" Classes="money" Margin="8,8,14,8" />
+                    <TextBlock Grid.Column="3" Text="状态" Margin="8,8,14,8" />
+                </Grid>
+            </Border>
+            <ScrollViewer Grid.Row="1">
+                <ItemsControl x:Name="Rows">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="local:ChannelRow">
+                            <Border BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
+                                <Grid ColumnDefinitions="70,*,132,92" MinHeight="40">
+                                    <TextBlock Text="{Binding IdText}" VerticalAlignment="Center" FontSize="13"
+                                               Margin="8,0,0,0" />
+                                    <TextBlock Grid.Column="1" Text="{Binding Title}" VerticalAlignment="Center"
+                                               FontSize="13" TextTrimming="CharacterEllipsis" Margin="2,0,8,0" />
+                                    <TextBlock Grid.Column="2" Text="{Binding AmountText}" Classes="money"
+                                               VerticalAlignment="Center" Margin="2,0,8,0" />
+                                    <TextBlock Grid.Column="3" Text="{Binding StatusLabel}" FontSize="13"
+                                               Foreground="{Binding StatusBrush}" VerticalAlignment="Center"
+                                               Margin="2,0,8,0" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</UserControl>

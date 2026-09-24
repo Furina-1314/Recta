@@ -134,10 +134,10 @@ public partial class MainWindow : Window
     {
         "overview" => new OverviewPage(),
         "requests" => new RequestsPage(),
+        "flexible" => new FlexiblePage(),
+        "faculty" => new FacultyPage(),
         "settings" => new SettingsPage(),
         "students" => new SkeletonPage("班费独立分户", "每人独立虚拟子账户、余额与流水,允许透支为负(生委垫资)。落地于 P10。", "\uE716"),
-        "flexible" => new SkeletonPage("灵活走账公款", "班级灵活公款的走账提单与增资,团支书存管。落地于 P9。", "\uE8C7"),
-        "faculty" => new SkeletonPage("系级报销暂挂", "班委垫付挂账、系财务打款核销,生活委员存管。落地于 P9。", "\uE8F1"),
         "inflow" => new SkeletonPage("入账台账", "三通道入账:灵活增资 / 系核销平账 / 同学补缴充值。落地于 P10。", "\uE896"),
         "budget" => new SkeletonPage("预算概览", "各渠道余额与月度动账走势(只读)。落地于 P11。", "\uE8EF"),
         "audit" => new SkeletonPage("审计看板", "全员提单统计:驳回率、核减差额、响应时效(团支书专属)。落地于 P11。", "\uE81C"),

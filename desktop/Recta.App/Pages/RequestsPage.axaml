@@ -1,20 +1,38 @@
 <UserControl xmlns="https://github.com/avaloniaui"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:Recta.App.Pages"
+             xmlns:controls="clr-namespace:Recta.App.Controls"
              x:Class="Recta.App.Pages.RequestsPage">
 
     <Grid ColumnDefinitions="*,8,376">
 
         <!-- ================= 左·台账主视图 ================= -->
-        <Grid RowDefinitions="Auto,Auto,*,Auto" Margin="28,24,12,16">
+        <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="28,24,12,16">
 
-            <StackPanel Spacing="2">
-                <TextBlock Classes="page-title" Text="审批" Margin="0" />
-                <TextBlock Classes="secondary" Text="动账审批台账 —— 两阶段流转：审批不动账，办结才扣账" />
-            </StackPanel>
+            <Grid ColumnDefinitions="*,Auto,12,Auto">
+                <StackPanel Spacing="2">
+                    <TextBlock Classes="page-title" Text="审批" Margin="0" />
+                    <TextBlock Classes="secondary" Text="动账审批台账 —— 两阶段流转:审批不动账,办结才扣账" />
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="NewRequestButton" VerticalAlignment="Bottom" Click="OnToggleNewRequest">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="&#xE710;" Classes="icon" />
+                        <TextBlock Text="新提单" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="3" x:Name="RefreshButton" VerticalAlignment="Bottom" Click="OnRefresh"
+                        AutomationProperties.Name="刷新">
+                    <TextBlock Text="&#xE72C;" Classes="icon" />
+                </Button>
+            </Grid>
+
+            <!-- 新提单(可折叠) -->
+            <Grid Grid.Row="1" x:Name="NewRequestHost" Margin="0,10,4,0" IsVisible="False">
+                <controls:NewRequestPanel x:Name="SubmitPanel" />
+            </Grid>
 
             <!-- 筛选与搜索 -->
-            <Grid Grid.Row="1" Margin="0,12,4,12" ColumnDefinitions="Auto,8,Auto,8,*,8">
+            <Grid Grid.Row="2" Margin="0,12,4,12" ColumnDefinitions="Auto,8,Auto,8,*,8">
                 <ComboBox x:Name="StatusFilter" MinWidth="116" SelectionChanged="OnFilterChanged"
                           AutomationProperties.Name="状态筛选">
                     <ComboBoxItem Content="全部状态" Tag="" />
@@ -35,7 +53,7 @@
             </Grid>
 
             <!-- 高密度表格:1px 硬线网格,金额等宽右对齐 -->
-            <Border Grid.Row="2" Classes="card" Padding="0" ClipToBounds="True">
+            <Border Grid.Row="3" Classes="card" Padding="0" ClipToBounds="True">
                 <Grid RowDefinitions="Auto,*">
                     <Border Background="{DynamicResource RectaPaneBrush}"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
@@ -90,7 +108,7 @@
             </Border>
 
             <!-- 页内底栏(§3:N 项记录 | 待办 X 项) -->
-            <Border Grid.Row="3" Margin="0,8,4,0" Padding="12,7"
+            <Border Grid.Row="4" Margin="0,8,4,0" Padding="12,7"
                     Background="{DynamicResource RectaPaneBrush}"
                     BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="1">
                 <TextBlock x:Name="PageSummary" Classes="secondary" Text="—" />

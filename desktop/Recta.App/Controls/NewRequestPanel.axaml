@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:Recta.App.Controls"
+             x:Class="Recta.App.Controls.NewRequestPanel">
+
+    <Border Classes="card" Padding="20,16">
+        <StackPanel Spacing="12">
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="新提单" FontWeight="SemiBold" FontSize="15" />
+                <Button Grid.Column="1" x:Name="CollapseButton" Content="收起" MinHeight="28" Padding="12,3"
+                        Click="OnToggleCollapse" FontSize="12" />
+            </Grid>
+
+            <Grid ColumnDefinitions="*,12,*,12,*">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="secondary" FontSize="12" Text="出资渠道" />
+                    <ComboBox x:Name="ChannelBox" SelectionChanged="OnChannelChanged" HorizontalAlignment="Stretch">
+                        <ComboBoxItem Content="灵活公款" Tag="FLEXIBLE" />
+                        <ComboBoxItem Content="系里报销" Tag="FACULTY" />
+                        <ComboBoxItem Content="班费平摊" Tag="CLASS_FUND" />
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Grid.Column="2" Spacing="6">
+                    <TextBlock Classes="secondary" FontSize="12" Text="动账事项" />
+                    <TextBox x:Name="TitleBox" Watermark="如:自动化实验耗材采购" />
+                </StackPanel>
+                <StackPanel Grid.Column="4" Spacing="6">
+                    <TextBlock Classes="secondary" FontSize="12" Text="申报金额(元)" />
+                    <TextBox x:Name="AmountBox" Classes="money" TextAlignment="Right" Watermark="0.00" />
+                </StackPanel>
+            </Grid>
+
+            <!-- 班费平摊配置 -->
+            <StackPanel x:Name="SplitSection" Spacing="10" IsVisible="False">
+                <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                <Grid ColumnDefinitions="*,12,Auto,12,Auto">
+                    <TextBlock Classes="secondary" FontSize="12"
+                               Text="参摊同学(勾选)——平摊由领域算法实时预演:尾差保全,分项之和恒等于总额" TextWrapping="Wrap" />
+                    <StackPanel Grid.Column="2" Spacing="6" MinWidth="170">
+                        <TextBlock Classes="secondary" FontSize="12" Text="尾差承担人" />
+                        <ComboBox x:Name="TailBearerBox" HorizontalAlignment="Stretch" MinWidth="170" />
+                    </StackPanel>
+                </Grid>
+                <ScrollViewer MaxHeight="150" Classes="card" Padding="8">
+                    <ItemsControl x:Name="StudentChecks">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="local:StudentOption">
+                                <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}" Content="{Binding Label}"
+                                          Margin="6,3" FontSize="13" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+                <TextBlock x:Name="SplitPreview" Classes="secondary" FontSize="12" TextWrapping="Wrap"
+                           Text="—" />
+            </StackPanel>
+
+            <Grid ColumnDefinitions="*,Auto">
+                <TextBlock x:Name="FormError" Classes="danger-text" TextWrapping="Wrap" IsVisible="False"
+                           VerticalAlignment="Center" />
+                <Button Grid.Column="1" Classes="accent" Content="提交提单" Click="OnSubmit" MinWidth="140" />
+            </Grid>
+
+        </StackPanel>
+    </Border>
+</UserControl>

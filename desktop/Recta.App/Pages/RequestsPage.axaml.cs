@@ -30,8 +30,17 @@ public partial class RequestsPage : UserControl
     public RequestsPage()
     {
         InitializeComponent();
+        SubmitPanel.RequestSubmitted += (_, _) => _ = LoadAsync();
+        SubmitPanel.Collapsed += (_, _) => NewRequestHost.IsVisible = false;
         Loaded += (_, _) => _ = LoadAsync();
     }
+
+    private void OnToggleNewRequest(object? sender, RoutedEventArgs e)
+    {
+        NewRequestHost.IsVisible = !NewRequestHost.IsVisible;
+    }
+
+    private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
 
     // ---------- 数据装载 ----------
 

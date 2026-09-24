@@ -1,0 +1,55 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:controls="clr-namespace:Recta.App.Controls"
+             x:Class="Recta.App.Pages.FlexiblePage">
+
+    <Grid RowDefinitions="Auto,Auto,Auto,*" Margin="28,24,28,16">
+
+        <StackPanel Spacing="2">
+            <TextBlock Classes="page-title" Text="走账" Margin="0" />
+            <TextBlock Classes="secondary"
+                       Text="班级灵活走账公款 —— 校系评优奖励与班级赞助等自主资金,团支书存管,用于小额应急与内部补贴" />
+        </StackPanel>
+
+        <!-- 余额与存管 -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,16,*" Margin="0,14">
+            <Border Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="secondary" Text="灵活公款余额" />
+                    <TextBlock x:Name="BalanceValue" Classes="money money-value" Text="—" />
+                </StackPanel>
+            </Border>
+            <Border Grid.Column="2" Classes="card">
+                <StackPanel Spacing="6">
+                    <TextBlock Classes="secondary" Text="通道规则" />
+                    <TextBlock FontSize="13" TextWrapping="Wrap"
+                               Text="审批与办结均由团支书唯一执行;增资入账仅团支书确认;余额不足时办结被拒绝(公款不可透支)。" />
+                </StackPanel>
+            </Border>
+        </Grid>
+
+        <!-- 增资(仅团支书) + 新提单 -->
+        <StackPanel Grid.Row="2" Spacing="12" Margin="0,2,0,0">
+            <Border x:Name="InflowCard" Classes="card" IsVisible="False">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="灵活公款增资" FontWeight="SemiBold" />
+                    <Grid ColumnDefinitions="*,12,2*,12,Auto">
+                        <TextBox x:Name="InflowAmountBox" Classes="money" TextAlignment="Right"
+                                 Watermark="0.00" />
+                        <TextBox Grid.Column="2" x:Name="InflowSourceBox"
+                                 Watermark="来源凭据(如:校运会评优奖励 500 元)" />
+                        <Button Grid.Column="4" Classes="accent" Content="确认增资" Click="OnInflow" />
+                    </Grid>
+                    <TextBlock x:Name="InflowError" Classes="danger-text" IsVisible="False" TextWrapping="Wrap" />
+                </StackPanel>
+            </Border>
+            <controls:NewRequestPanel x:Name="SubmitPanel" />
+        </StackPanel>
+
+        <!-- 本渠道单据 -->
+        <Grid Grid.Row="3" RowDefinitions="Auto,8,*" Margin="0,12,0,0">
+            <TextBlock Text="本渠道单据" FontWeight="SemiBold" />
+            <controls:ChannelRequestList Grid.Row="2" x:Name="ChannelList" Category="FLEXIBLE" />
+        </Grid>
+    </Grid>
+</UserControl>

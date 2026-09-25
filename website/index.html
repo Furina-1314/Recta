@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="zh-CN" class="paged">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0078D7">
+  <meta name="description" content="矩衡 Recta，面向高校班委的财务审批与分户账管理系统。三类资金通道、两阶段流转、全链路整数分，对账守恒恒等式实时校验。">
+  <meta property="og:title" content="矩衡 Recta — 记账有矩，用度有衡。">
+  <meta property="og:description" content="面向高校班委的财务审批与分户账管理系统。让每一笔班费，笔笔分明。">
+  <meta property="og:type" content="website">
+  <link rel="canonical" href="https://furina-1314.github.io/Recta/">
+  <link rel="icon" type="image/svg+xml" href="assets/recta.svg">
+  <link rel="stylesheet" href="styles.css">
+  <script src="script.js" defer></script>
+  <title>矩衡 Recta — 记账有矩，用度有衡。</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳到主要内容</a>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="#" aria-label="矩衡 Recta 首页"><img src="assets/recta.svg" width="32" height="32" alt=""><span class="app-wordmark">RECTA</span></a>
+      <button class="menu-toggle" type="button" aria-label="打开导航" aria-expanded="false" aria-controls="navigation">菜单 <span aria-hidden="true">☰</span></button>
+      <nav id="navigation" aria-label="主导航">
+        <a href="#features">产品功能</a><a href="#workflow">工作方式</a><a href="#theme">明暗双主题</a><a href="#privacy">确定性设计</a><a href="https://github.com/Furina-1314/Recta" class="repo-link">GitHub <span aria-hidden="true">↗</span></a>
+        <a class="button small" href="#download">下载矩衡 <span aria-hidden="true">↓</span></a>
+      </nav>
+    </div>
+  </header>
+  <main id="main">
+    <section tabindex="-1" class="hero container" id="home">
+      <div class="eyebrow"><span class="red-line"></span> 为高校班委而建 · 可审计的财务审批工作台</div>
+      <div class="hero-heading"><h1>记账有矩，<br><span>用度有衡。</span></h1><div class="hero-copy"><p>让账目有凭据，让交接有底气。<br>从提单、审批到办结，<br>矩衡让班委的每一分钱，笔笔分明。</p><div class="hero-actions"><a class="button" href="#download">下载 Windows 版 <span aria-hidden="true">↓</span></a><a class="text-link" href="#features">探索产品 <span aria-hidden="true">↗</span></a></div><div class="hero-note">全链路整数分 <span>·</span> 两阶段流转 <span>·</span> 实时同步收敛</div></div></div>
+      <div class="product-frame"><div class="preview-top"><span><span class="preview-dot"></span> RECTA / 全班资金，一本守恒的账</span><span>WINDOWS DESKTOP</span></div><img src="assets/app-overview.png" width="1920" height="1230" alt="矩衡 Windows 应用真实界面：资金大盘展示四类余额卡片与对账守恒恒等式实时快照" fetchpriority="high"><div class="preview-bottom"><span>大盘 · 对账守恒恒等式 Σb = C_cash − A_advance 实时快照。</span><span>01 / 资金大盘</span></div></div>
+      <div class="principles"><div><span class="principle-number">01</span><span>全链路整数分</span></div><div><span class="principle-number">02</span><span>审批与办结两阶段</span></div><div><span class="principle-number">03</span><span>对账守恒恒等式</span></div></div>
+    </section>
+    <section tabindex="-1" class="section container" id="features">
+      <div class="section-heading"><div><div class="eyebrow">BUILT FOR ACCOUNTABILITY / 产品能力</div><h2>从一团乱账，<br>走向笔笔分明。</h2></div><p>三类通道、两阶段流转与导出审计，<br>共享同一份服务端账本。<br>减少对不上账的夜晚，把时间还给同学。</p></div>
+      <div class="feature-grid">
+        <article class="feature"><span class="feature-index">01 / CHANNELS</span><h3>三类资金通道，各走各账。</h3><p>班级灵活公款由团支书存管，系级报销往来由生活委员暂挂，班费个人独立分户受托代管。异构通道分流而治，不混一笔钱。</p><div class="feature-meta">灵活公款 <span>／</span> 系报暂挂 <span>／</span> 个人分户</div></article>
+        <article class="feature"><span class="feature-index">02 / APPROVAL</span><h3>两阶段流转，账实分离。</h3><p>审批只认定资质与额度，不动账；办结确认资金到位后，才以原子事务扣账。驳回支持预置原因加补充说明，全程留痕。</p><div class="feature-meta">审批不动账 <span>／</span> 办结才扣账 <span>／</span> 结构化驳回</div></article>
+        <article class="feature"><span class="feature-index">03 / LEDGER</span><h3>整数分记账，透支即借贷。</h3><p><code>int64</code> 定点「分」贯穿全链路，全局禁用浮点。透支记负，构成对生活委员个人的无息借贷，办结批复自动披露垫资明细。</p><div class="feature-meta">全链路整数分 <span>／</span> 透支记负 <span>／</span> 垫资披露</div></article>
+        <article class="feature"><span class="feature-index">04 / EXPORT</span><h3>导出与审计，随时备查。</h3><p>账目流水、分户名单与个人流水一键导出 CSV，UTF-8 BOM 加 RFC 4180 转义，Excel 直接打开不乱码；用户开立、停用与改名全程审计。</p><div class="feature-meta">CSV 导出 <span>／</span> 审计日志 <span>／</span> 用户管理</div></article>
+      </div>
+    </section>
+    <section tabindex="-1" class="workflow-section" id="workflow"><div class="container">
+      <div class="section-heading"><div><div class="eyebrow">A DISCIPLINED FLOW / 工作方式</div><h2>每一次动账，<br>都走完该走的路。</h2></div><p>从一张单据开始，到一次原子扣账。<br>把申请、审批与办结串成闭环。</p></div>
+      <div class="workflow-layout"><div class="steps"><article><span>01</span><div><h3>统一提单，单号可追</h3><p>支出与入账共用一个入口，自动生成 <code>REQ</code> / <code>INF</code> 单号并附证明材料，按出资通道分流进入审批。</p></div></article><article><span>02</span><div><h3>审批认定，不动账</h3><p>团支书与生活委员按通道资质与额度审批，此时账面纹丝不动；不合格的单据以预置原因驳回，留痕可查。</p></div></article><article><span>03</span><div><h3>办结扣账，守恒校验</h3><p>资金到位后办结，原子事务扣账并披露垫资明细。大盘上的 Σb = C_cash − A_advance 恒等式，时刻成立。</p></div></article></div><figure class="overview"><img src="assets/app-requests.png" width="1920" height="1230" loading="lazy" alt="矩衡审批台账页面：单据列表、高级筛选与动账审查办结面板三栏工作区"><figcaption><span>一处台账，审尽所有动账。</span><span>02 / 审批台账</span></figcaption></figure></div>
+    </div></section>
+    <section tabindex="-1" class="showcase container" id="theme">
+      <div class="showcase-copy"><div class="eyebrow"><span class="red-line"></span> DARK &amp; LIGHT / 明暗双主题</div><h2>白昼记账，<br>深夜也对得上。</h2><p>沿袭 Windows 10 MDL2 视觉语言：绝对方角、1px 实体细线、高信息密度与等宽表格数字。明暗双主题一键切换，#0078D7 七级蓝色阶贯穿全局，重要的数字永远先被看见。</p><div class="feature-meta">绝对方角 <span>／</span> 1px 实体细线 <span>／</span> 等宽表格数字</div><a class="text-link" href="https://github.com/Furina-1314/Recta#readme">在 GitHub 阅读技术规范 <span aria-hidden="true">↗</span></a></div>
+      <figure class="showcase-media"><div class="preview-top"><span><span class="preview-dot"></span> RECTA / 大盘 · 深色主题</span><span>WINDOWS DESKTOP</span></div><img src="assets/app-dark.png" width="1920" height="1230" loading="lazy" alt="矩衡大盘页面的深色主题：同样的守恒恒等式与余额卡片，以深色呈现"><div class="preview-bottom"><span>明暗双主题，同一本账。</span><span>03 / 深色主题</span></div></figure>
+    </section>
+    <section tabindex="-1" class="showcase showcase-flip container" id="bootstrap">
+      <figure class="showcase-media bootstrap-media"><div class="preview-top"><span><span class="preview-dot"></span> RECTA / 登录 · 一次性引导</span></div><img src="assets/app-bootstrap.png" width="660" height="780" loading="lazy" alt="矩衡登录窗口：空系统经一次性引导开立首任团支书后，凭固定用户名与口令登录"><div class="preview-bottom"><span>首任团支书，由引导开立。</span><span>04 / 首次使用</span></div></figure>
+      <div class="showcase-copy"><div class="eyebrow"><span class="red-line"></span> ONBOARDING &amp; ROLES / 首次使用</div><h2>开箱引导，<br>权限各就其位。</h2><p>空系统启动时弹出一次性引导：开立首任团支书并生成临时口令，首登强制改密；此后所有账号由团支书在系统内开立。防自锁、防自停用、席位唯一等防护写进域层，不依赖界面自觉。</p><div class="feature-meta">一次性引导 <span>／</span> 首登强制改密 <span>／</span> 域层防护</div><a class="text-link" href="https://github.com/Furina-1314/Recta#readme">查看构建与使用说明 <span aria-hidden="true">↗</span></a></div>
+    </section>
+    <section tabindex="-1" class="privacy container section" id="privacy"><div class="privacy-title"><div class="eyebrow">CORRECT BY CONSTRUCTION.</div><h2>你的班费，<br>你的凭据，<br><span>你的底气。</span></h2><a class="text-link" href="https://github.com/Furina-1314/Recta#readme">阅读 README 技术规范 <span aria-hidden="true">↗</span></a></div><div class="privacy-details"><article><span>01</span><div><h3>守恒，是硬约束</h3><p>Σb = C_cash − A_advance 作为对账守恒恒等式，在大盘实时快照。关键扣账以 FOR UPDATE 行级锁串行化，抗休眠重试执行器兜底，任何一次动账都不允许破坏守恒。</p></div></article><article><span>02</span><div><h3>同步，最终收敛</h3><p>change_events 全局单调序列增量拉取，NOTIFY 轻通知双轨并行。断线退避重连，重连即补齐收敛，全员始终看到同一本账。</p></div></article><article><span>03</span><div><h3>隔离，测试不碰生产</h3><p>自动化回归、GUI 试玩与正式使用三轨分离。测试流量全部走隔离的数据库分支，可秒级重置；生产分支自始至终只承载真实数据。</p></div></article><div class="open-source"><span>开放源代码 · 构建与部署文档见仓库</span><a href="https://github.com/Furina-1314/Recta">查看源码 ↗</a></div></div></section>
+    <section tabindex="-1" class="download-section" id="download"><div class="container download-inner"><div><div class="eyebrow">MAKE EVERY CENT ACCOUNTABLE.</div><h2>把每一分钱，<br>记进同一本账。</h2><p>v0.2.0 正式版现已上线。账目流水、分户名单与个人流水，均可一键导出 CSV。</p></div><div class="download-card"><img src="assets/recta.svg" width="48" height="48" alt=""><h3>矩衡 Recta</h3><p>Windows 10 / 11 · x64</p><a class="button" href="https://github.com/Furina-1314/Recta/releases/latest">获取 Windows 安装包 <span aria-hidden="true">↓</span></a><p class="installation-note">推荐 EXE 安装包，自包含 .NET 运行时，无需单独安装。</p><div class="download-links"><a href="https://github.com/Furina-1314/Recta/releases">所有版本与预发布 ↗</a><a href="https://github.com/Furina-1314/Recta#readme">构建指南 ↗</a></div></div></div></section>
+    <section tabindex="-1" class="closing-panel" id="faq"><div class="faq container section"><div><div class="eyebrow">GOOD TO KNOW / 常见问题</div><h2>开始之前。</h2></div><div class="faq-list"><details><summary>矩衡支持哪些系统？</summary><p>目前提供 Windows x64 桌面版，支持 Windows 10 与 Windows 11。原生核心以 Modern C++20 编译，桌面层基于 Avalonia UI（.NET 10），安装包自包含运行时，无需另装 .NET。</p></details><details><summary>数据存在哪里？会丢吗？</summary><p>账目集中存储在服务端 PostgreSQL（推荐 Neon Serverless Postgres），金额一律以 BIGINT「分」存储。对账守恒恒等式 Σb = C_cash − A_advance 在大盘实时校验，账目一旦落库即守恒。</p></details><details><summary>使用前需要注册账号吗？</summary><p>不需要自行注册。空系统启动时弹出一次性引导，开立首任团支书并生成临时口令，首登强制改密；其后所有账号由团支书在系统内开立，账号可在用户管理页重置、停用或启用。</p></details><details><summary>在哪里查看更新或反馈问题？</summary><p>每个版本的改动都发布在 <a href="https://github.com/Furina-1314/Recta/releases">GitHub Releases</a>，问题与建议请提交到 <a href="https://github.com/Furina-1314/Recta/issues">GitHub Issues</a>，构建与部署说明见仓库 <a href="https://github.com/Furina-1314/Recta#readme">README</a>。</p></details></div></div>
+  <footer class="container footer"><div class="footer-top"><a class="brand" href="#"><img src="assets/recta.svg" width="28" height="28" alt=""><span class="app-wordmark">RECTA</span></a><span>让班费笔笔分明。</span><nav aria-label="页脚导航"><a href="https://github.com/Furina-1314/Recta">源码</a><a href="https://github.com/Furina-1314/Recta/releases">更新日志</a><a href="https://github.com/Furina-1314/Recta/issues">反馈</a></nav></div><div class="footer-bottom"><span>© 2026 Furina-1314 · Recta</span><span>开源于 GitHub · 为可稽核的班费而设计</span><a href="#">回到顶部 ↑</a></div></footer></section>
+  </main>
+</body>
+</html>

@@ -75,6 +75,21 @@ DATABASE_URL_UNPOOLED="postgresql://...@ep-xxx.../neondb?sslmode=require"   # �
 
 **首次运行**：空系统会弹出一次性引导——开立首任团支书并生成临时口令，首登强制改密；其后所有账号由团支书在系统内开立。
 
+## 测试与数据库隔离
+
+生产数据零污染是硬约束，所有测试流量都走 Neon 的 `recta-test` 分支（schema 复制自 production，物理隔离，写坏随时重置）：
+
+| 场景 | 方法 | 碰到的库 |
+| --- | --- | --- |
+| **自动化回归**（46 项 C++ + 6 项 C#，覆盖领域算法/存储/认证/两阶段流转/同步收敛） | `ctest --test-dir native/build/win-x64-release -C Release` 与 `dotnet test desktop/Recta.slnx -c Release` | 仅 recta-test（测试内自动清库重建数据） |
+| **GUI 手工试玩**（点界面、造数据、验流程） | 双击 `scripts/launch-test.bat`（或先 `set RECTA_TEST_DATABASE_URL=...` 再启动应用） | 仅 recta-test |
+| **正式使用** | 正常启动应用（读 `.env.local`） | 仅 production |
+
+- 测试分支连接串放仓库根 `.env.test.local`（gitignored）：`DATABASE_URL="postgresql://…recta-test分支的-pooler端点…"`
+- 跑自动化测试前，原生核心须为开发构建（`RECTA_DEV_TOOLS=ON`，仓库默认）；发布打包前按下一节切回 `OFF`
+- **重置测试数据**：Neon Console → `recta-test` 分支 → Reset from parent（秒级回滚到干净 schema）；或在 SQL Editor 执行 [`db/reset-test.sql`](db/reset-test.sql)
+- 生产分支自始至终只承载真实数据；若怀疑被污染，可比对 `users`/`expense_requests` 行数
+
 ## 发布打包
 
 ```bash

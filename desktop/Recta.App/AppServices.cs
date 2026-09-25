@@ -15,6 +15,10 @@ public static class AppServices
     public static bool SmokeMode =>
         Environment.GetEnvironmentVariable("RECTA_SMOKE") == "1";
 
+    // 由 launch-test.bat 设置:标题栏据此显示【测试库】,防止测试/生产窗口认错。
+    public static bool TestMode =>
+        Environment.GetEnvironmentVariable("RECTA_TEST_MODE") == "1";
+
     // 冒烟模式下改连 recta-test 测试分支(演示数据),不影响生产。
     public static bool SmokeUseTestDb =>
         SmokeMode && Environment.GetEnvironmentVariable("RECTA_SMOKE_TESTDB") == "1";

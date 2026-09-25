@@ -12,6 +12,10 @@ public partial class LoginWindow : Window
     {
         InitializeComponent();
         Branding.ApplyIcon(this);
+        if (AppServices.TestMode)
+        {
+            Title = "Recta 矩衡【测试库】· 登录";
+        }
         Loaded += async (_, _) => await DetectFirstRunAsync();
         if (AppServices.SmokeMode && Environment.GetEnvironmentVariable("RECTA_SMOKE_LOGIN") == "1")
         {

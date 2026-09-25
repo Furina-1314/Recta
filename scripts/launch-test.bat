@@ -11,6 +11,7 @@ REM               or run db/reset-test.sql in its SQL Editor.
 REM ============================================================
 
 set "DATABASE_URL="
+set "RECTA_TEST_MODE=1"
 if defined RECTA_TEST_DATABASE_URL set "DATABASE_URL=%RECTA_TEST_DATABASE_URL%"
 if defined DATABASE_URL goto :findapp
 

@@ -39,6 +39,10 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
         Branding.ApplyIcon(this);
+        if (AppServices.TestMode)
+        {
+            Title = "Recta 矩衡【测试库】";
+        }
 
         var session = AppServices.Session;
         UserNameText.Text = session?.DisplayName ?? "演示模式";

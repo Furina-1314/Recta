@@ -81,7 +81,8 @@ internal static partial class RectaNative
                                                       long approved_cents, string? notes);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
-    internal static partial int recta_reject_request(string actor_id, int request_id, string notes);
+    internal static partial int recta_reject_request(string actor_id, int request_id,
+                                                     string reject_category, string notes);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
     internal static partial int recta_settle_request(string actor_id, int request_id,

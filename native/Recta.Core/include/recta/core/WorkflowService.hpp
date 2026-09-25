@@ -74,8 +74,9 @@ public:
     // 审批:approved < applied 即核减(核减理由必填);approved == applied 全额批准。
     void ApproveRequest(const std::string& actor_id, int request_id, Money approved_amount,
                         const std::optional<std::string>& notes);
-    // 直接驳回,理由必填,单据归档终止。
-    void RejectRequest(const std::string& actor_id, int request_id, const std::string& notes);
+    // 直接驳回:预置原因必选(category,含"其他"),"其他"须附补充说明;单据归档终止。
+    void RejectRequest(const std::string& actor_id, int request_id,
+                       const std::string& category, const std::string& notes);
 
     // 办结出账(§8.4 原子闭环)。extra_notes 由办结人附加,系统自动追加垫资批复。
     [[nodiscard]] SettlementResult SettleRequest(const std::string& actor_id, int request_id,

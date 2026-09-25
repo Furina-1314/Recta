@@ -26,8 +26,8 @@ public:
     // 两阶段状态机迁移(均置时间戳与经办人)。
     static void MarkApproved(pqxx::work& tx, int request_id, int64_t approved_amount_cents,
                              const std::string& reviewer_id, const std::optional<std::string>& notes);
-    static void MarkRejected(pqxx::work& tx, int request_id,
-                             const std::string& reviewer_id, const std::string& notes);
+    static void MarkRejected(pqxx::work& tx, int request_id, const std::string& reviewer_id,
+                             const std::string& category, const std::string& notes);
     static void MarkSettled(pqxx::work& tx, int request_id, int64_t settled_amount_cents,
                             const std::string& settler_id, const std::optional<std::string>& notes);
 

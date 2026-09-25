@@ -293,13 +293,20 @@ TEST_F(WorkflowTest, SubmitAndReviewValidations) {
     const int id = workflow_->SubmitRequest("u_tech_01", "待驳回事项",
                                             recta::AccountCategory::Flexible, recta::Money(1000),
                                             std::nullopt);
-    EXPECT_THROW((void)workflow_->RejectRequest("u_sec_01", id, ""), std::invalid_argument);
-    workflow_->RejectRequest("u_sec_01", id, "票据不全");
+    // 预置原因必选;非法键拒绝;"其他"必须附补充说明;正常驳回落库键与说明。
+    EXPECT_THROW((void)workflow_->RejectRequest("u_sec_01", id, "", ""), std::invalid_argument);
+    EXPECT_THROW((void)workflow_->RejectRequest("u_sec_01", id, "MADE_UP_KEY", "x"),
+                 std::invalid_argument);
+    EXPECT_THROW((void)workflow_->RejectRequest("u_sec_01", id, "OTHER", ""),
+                 std::invalid_argument);
+    workflow_->RejectRequest("u_sec_01", id, "VOUCHER_INCOMPLETE", "补票后重新提单");
     const auto request = context_->ExecuteTransaction(
         [&](pqxx::work& tx) { return recta::storage::RequestRepo::Find(tx, id); });
     EXPECT_EQ(request->status, "REJECTED");
+    ASSERT_TRUE(request->reject_category.has_value());
+    EXPECT_EQ(*request->reject_category, "VOUCHER_INCOMPLETE");
     ASSERT_TRUE(request->review_notes.has_value());
-    EXPECT_EQ(*request->review_notes, "票据不全");
+    EXPECT_EQ(*request->review_notes, "补票后重新提单");
 
     // 驳回后不可再审批/办结(归档终止,需重新提单)。
     EXPECT_THROW((void)workflow_->ApproveRequest("u_sec_01", id, recta::Money(500), std::nullopt),

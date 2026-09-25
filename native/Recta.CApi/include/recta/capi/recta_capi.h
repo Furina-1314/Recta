@@ -80,7 +80,7 @@ RECTA_API int32_t recta_submit_request(const char* actor_id, const char* title,
 RECTA_API int32_t recta_approve_request(const char* actor_id, int32_t request_id,
                                         int64_t approved_cents, const char* notes /*可空*/);
 RECTA_API int32_t recta_reject_request(const char* actor_id, int32_t request_id,
-                                       const char* notes);
+                                       const char* reject_category, const char* notes);
 RECTA_API int32_t recta_settle_request(const char* actor_id, int32_t request_id,
                                        const char* extra_notes /*可空*/, char* buf, int32_t cap);
 /* inflow_json: {"destination":"TO_...","amount_cents":N,"source_title":"...",

@@ -34,6 +34,8 @@ public sealed record ExpenseRequestDto(
     [property: JsonPropertyName("review_notes")] string? ReviewNotes,
     [property: JsonPropertyName("settlement_notes")] string? SettlementNotes,
     [property: JsonPropertyName("voucher_url")] string? VoucherUrl,
+    [property: JsonPropertyName("reject_category")] string? RejectCategory,
+    [property: JsonPropertyName("reject_category_label")] string? RejectCategoryLabel,
     [property: JsonPropertyName("created_at")] string? CreatedAt,
     [property: JsonPropertyName("reviewed_at")] string? ReviewedAt,
     [property: JsonPropertyName("settled_at")] string? SettledAt);

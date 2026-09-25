@@ -2,6 +2,7 @@
 #include "recta/core/WorkflowService.hpp"
 
 #include "recta/Advance.hpp"
+#include "recta/RejectReasons.hpp"
 #include "recta/Conservation.hpp"
 #include "recta/Split.hpp"
 #include "recta/storage/EntityAccountsRepo.hpp"
@@ -178,9 +179,12 @@ void WorkflowService::ApproveRequest(const std::string& actor_id, int request_id
 }
 
 void WorkflowService::RejectRequest(const std::string& actor_id, int request_id,
-                                    const std::string& notes) {
-    if (notes.empty()) {
-        throw std::invalid_argument("驳回原因说明必填(§5.2)");
+                                    const std::string& category, const std::string& notes) {
+    if (!IsValidRejectCategory(category)) {
+        throw std::invalid_argument("请选择驳回原因");
+    }
+    if (category == kRejectCategoryOther && notes.empty()) {
+        throw std::invalid_argument("驳回原因为“其他”时，必须填写补充说明");
     }
 
     context_.ExecuteTransaction([&](pqxx::work& tx) {
@@ -188,7 +192,7 @@ void WorkflowService::RejectRequest(const std::string& actor_id, int request_id,
         AssertCanReview(RoleOf(actor), RequireCategoryOf(tx, request_id));
         const auto request = LockRequestInStatus(tx, request_id, RequestStatus::PendingReview);
 
-        storage::RequestRepo::MarkRejected(tx, request_id, actor_id, notes);
+        storage::RequestRepo::MarkRejected(tx, request_id, actor_id, category, notes);
         AppendChangeEvent(tx, "expense_request", request_id, "REJECTED",
                           std::format(R"({{"request_id":{}}})", request_id));
         return 0;

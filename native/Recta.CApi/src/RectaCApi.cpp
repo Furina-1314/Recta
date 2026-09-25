@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include "recta/Conservation.hpp"
+#include "recta/RejectReasons.hpp"
 #include "recta/Money.hpp"
 #include "recta/Roles.hpp"
 #include "recta/Split.hpp"
@@ -250,6 +251,10 @@ json RequestJson(const recta::storage::ExpenseRequestRow& r) {
         {"review_notes", OptJson(r.review_notes)},
         {"settlement_notes", OptJson(r.settlement_notes)},
         {"voucher_url", OptJson(r.voucher_url)},
+        {"reject_category", OptJson(r.reject_category)},
+        {"reject_category_label",
+         r.reject_category.has_value() ? json(recta::RejectCategoryLabel(*r.reject_category))
+                                       : json(nullptr)},
         {"created_at", OptJson(r.created_at)},
         {"reviewed_at", OptJson(r.reviewed_at)},
         {"settled_at", OptJson(r.settled_at)},
@@ -537,10 +542,12 @@ int32_t recta_approve_request(const char* actor_id, int32_t request_id, int64_t 
     });
 }
 
-int32_t recta_reject_request(const char* actor_id, int32_t request_id, const char* notes) {
+int32_t recta_reject_request(const char* actor_id, int32_t request_id,
+                             const char* reject_category, const char* notes) {
     return Call([&] {
         RequireReady();
-        Svc()->workflow->RejectRequest(ReqStr(actor_id), request_id, ReqStr(notes));
+        Svc()->workflow->RejectRequest(ReqStr(actor_id), request_id, ReqStr(reject_category),
+                                       OptStr(notes).value_or(""));
     });
 }
 
@@ -854,12 +861,13 @@ int32_t recta_get_audit_statistics(const char* actor_id, char* buf, int32_t cap)
 
             json reasons = json::array();
             const auto rejection_reasons = tx.exec(
-                "SELECT review_notes, COUNT(*) AS c FROM expense_requests "
-                "WHERE status = 'REJECTED' AND review_notes IS NOT NULL "
-                "GROUP BY review_notes ORDER BY c DESC, review_notes LIMIT 5");
+                "SELECT reject_category, COUNT(*) AS c FROM expense_requests "
+                "WHERE status = 'REJECTED' AND reject_category IS NOT NULL "
+                "GROUP BY reject_category ORDER BY c DESC, reject_category LIMIT 7");
             for (const auto& row : rejection_reasons) {
+                const auto key = row[0].as<std::string>();
                 reasons.push_back(json{
-                    {"reason", row[0].as<std::string>()},
+                    {"reason", recta::RejectCategoryLabel(key)},
                     {"count", row[1].as<int64_t>()},
                 });
             }

@@ -193,8 +193,20 @@
                             <TextBlock Classes="secondary" FontSize="12"
                                        Text="核准金额(元)——低于申报即为核减,须填写核减原因" />
                             <TextBox x:Name="ApproveAmountBox" Classes="money" TextAlignment="Right" />
+
+                            <TextBlock Classes="secondary" FontSize="12" Margin="0,4,0,0"
+                                       Text="驳回原因(驳回时必选)" />
+                            <ComboBox x:Name="RejectCategoryBox" HorizontalAlignment="Stretch">
+                                <ComboBoxItem Content="票据凭证不全" Tag="VOUCHER_INCOMPLETE" />
+                                <ComboBoxItem Content="金额有误" Tag="AMOUNT_WRONG" />
+                                <ComboBoxItem Content="不属于班级支出" Tag="NOT_CLASS_EXPENSE" />
+                                <ComboBoxItem Content="超出预算额度" Tag="OVER_BUDGET" />
+                                <ComboBoxItem Content="信息填写不完整" Tag="INFO_INCOMPLETE" />
+                                <ComboBoxItem Content="重复提单" Tag="DUPLICATE" />
+                                <ComboBoxItem Content="其他" Tag="OTHER" />
+                            </ComboBox>
                             <TextBox x:Name="ReviewNotesBox" MinHeight="64" TextWrapping="Wrap"
-                                     Watermark="核减原因 / 审批意见(核减或驳回时必填)" AcceptsReturn="True" />
+                                     Watermark="审批意见 / 核减原因 / 驳回补充说明(选其他时必填)" AcceptsReturn="True" />
                             <Grid ColumnDefinitions="*,12,*">
                                 <Button Classes="danger" Content="驳回" Click="OnReject" />
                                 <Button Grid.Column="2" Classes="accent" Content="核准出账" Click="OnApprove" />

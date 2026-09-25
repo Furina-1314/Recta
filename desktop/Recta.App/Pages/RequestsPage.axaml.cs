@@ -156,8 +156,15 @@ public partial class RequestsPage : UserControl, IRefreshable
         ApprovedText.Text = r.ApprovedAmountCents is { } a ? RectaClient.FormatMoney(a) : "—";
         SettledText.Text = r.SettledAmountCents is { } s ? RectaClient.FormatMoney(s) : "—";
 
-        ReviewNotesLabel.IsVisible = ReviewNotesText.IsVisible = !string.IsNullOrEmpty(r.ReviewNotes);
-        ReviewNotesText.Text = r.ReviewNotes ?? "";
+        ReviewNotesLabel.IsVisible = ReviewNotesText.IsVisible =
+            !string.IsNullOrEmpty(r.ReviewNotes) || !string.IsNullOrEmpty(r.RejectCategory);
+        ReviewNotesLabel.Text = r.Status == "REJECTED" ? "驳回结果" : "审批意见";
+        var rejectLine = r.Status == "REJECTED" && !string.IsNullOrEmpty(r.RejectCategoryLabel)
+            ? $"[{r.RejectCategoryLabel}]"
+            : "";
+        ReviewNotesText.Text = string.IsNullOrEmpty(r.ReviewNotes)
+            ? rejectLine
+            : rejectLine + (rejectLine.Length > 0 ? " " : "") + r.ReviewNotes;
         SettleNotesLabel.IsVisible = SettleNotesText.IsVisible = !string.IsNullOrEmpty(r.SettlementNotes);
         SettleNotesText.Text = r.SettlementNotes ?? "";
 
@@ -260,17 +267,23 @@ public partial class RequestsPage : UserControl, IRefreshable
         }
         HideInspectorError();
 
-        var notes = (ReviewNotesBox.Text ?? "").Trim();
-        if (notes.Length == 0)
+        var category = (RejectCategoryBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+        if (category.Length == 0)
         {
-            ShowInspectorError("请填写驳回原因。");
+            ShowInspectorError("请选择驳回原因。");
+            return;
+        }
+        var notes = (ReviewNotesBox.Text ?? "").Trim();
+        if (category == "OTHER" && notes.Length == 0)
+        {
+            ShowInspectorError("驳回原因为“其他”时，请填写补充说明。");
             return;
         }
 
         try
         {
             await ConnectionGate.RunAsync(() => AppServices.Client.RejectRequest(
-                AppServices.Session!.UserId, _current.Request.Id, notes));
+                AppServices.Session!.UserId, _current.Request.Id, category, notes));
             await LoadAndReselectAsync();
         }
         catch (RectaException ex)

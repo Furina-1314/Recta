@@ -120,9 +120,9 @@ public sealed class RectaClient
         Check(RectaNative.recta_approve_request(actorId, requestId, approvedCents, notes));
     }
 
-    public void RejectRequest(string actorId, int requestId, string notes)
+    public void RejectRequest(string actorId, int requestId, string rejectCategory, string notes)
     {
-        Check(RectaNative.recta_reject_request(actorId, requestId, notes));
+        Check(RectaNative.recta_reject_request(actorId, requestId, rejectCategory, notes));
     }
 
     public SettlementOutcome SettleRequest(string actorId, int requestId, string? extraNotes = null)

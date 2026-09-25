@@ -10,6 +10,7 @@ namespace {
 constexpr auto kColumns =
     "id, title, account_category, applied_amount_cents, approved_amount_cents, settled_amount_cents, "
     "applicant_id, reviewer_id, settler_id, status, review_notes, settlement_notes, voucher_url, "
+    "reject_category, "
     "created_at, reviewed_at, settled_at";
 
 template <typename RowT>
@@ -28,6 +29,7 @@ ExpenseRequestRow MapRow(const RowT& row) {
     request.review_notes = row["review_notes"].as<std::optional<std::string>>();
     request.settlement_notes = row["settlement_notes"].as<std::optional<std::string>>();
     request.voucher_url = row["voucher_url"].as<std::optional<std::string>>();
+    request.reject_category = row["reject_category"].as<std::optional<std::string>>();
     request.created_at = row["created_at"].as<std::optional<std::string>>();
     request.reviewed_at = row["reviewed_at"].as<std::optional<std::string>>();
     request.settled_at = row["settled_at"].as<std::optional<std::string>>();
@@ -98,12 +100,14 @@ void RequestRepo::MarkApproved(pqxx::work& tx, int request_id, int64_t approved_
 }
 
 void RequestRepo::MarkRejected(pqxx::work& tx, int request_id,
-                               const std::string& reviewer_id, const std::string& notes) {
+                               const std::string& reviewer_id, const std::string& category,
+                               const std::string& notes) {
     tx.exec(
         "UPDATE expense_requests "
-        "SET status = 'REJECTED', reviewer_id = $2, review_notes = $3, reviewed_at = NOW() "
+        "SET status = 'REJECTED', reject_category = $2, reviewer_id = $3, "
+        "    review_notes = $4, reviewed_at = NOW() "
         "WHERE id = $1",
-        pqxx::params(request_id, reviewer_id, notes));
+        pqxx::params(request_id, category, reviewer_id, notes));
 }
 
 void RequestRepo::MarkSettled(pqxx::work& tx, int request_id, int64_t settled_amount_cents,

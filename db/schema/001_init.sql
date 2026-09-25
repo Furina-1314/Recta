@@ -1,5 +1,5 @@
 -- Recta 矩衡 —— 数据库初始化 DDL(Vibe.md §6 原文)
--- 已于 2026-09-24 在 Neon 项目 misty-bar-36297499 / production 分支执行。
+-- 于 2026-09-25 重建于 Neon 项目 misty-bar-36297499 两分支(含 reject_category;原数据已按需求清空)。
 -- 金额一律 BIGINT(分);审批与扣款并发依赖 FOR UPDATE 行级锁(见存储层)。
 
 -- 1. 用户与鉴权表 (用户名由团支书统一定义，不可篡改)
@@ -52,9 +52,10 @@ CREATE TABLE expense_requests (
     status VARCHAR(32) NOT NULL DEFAULT 'PENDING_REVIEW',
     -- 'PENDING_REVIEW', 'APPROVED', 'SETTLED', 'REJECTED'
 
-    review_notes TEXT,                             -- 审批核减理由
+    review_notes TEXT,                             -- 审批意见/核减原因/驳回补充说明
     settlement_notes TEXT,                         -- 办结批复与自动垫资说明
-    voucher_url TEXT,                              -- 证明材料链接(增补列,见 002)
+    voucher_url TEXT,                              -- 证明材料链接
+    reject_category VARCHAR(64),                   -- 预置驳回原因(键;NULL=未驳回)
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     reviewed_at TIMESTAMPTZ,

@@ -48,6 +48,7 @@ struct ExpenseRequestRow {
     std::optional<std::string> review_notes;
     std::optional<std::string> settlement_notes;
     std::optional<std::string> voucher_url;      // 证明材料链接
+    std::optional<std::string> reject_category;  // 预置驳回原因(键;NULL=未驳回)
     std::optional<std::string> created_at;
     std::optional<std::string> reviewed_at;
     std::optional<std::string> settled_at;

@@ -85,13 +85,16 @@
                                         <TextBlock Grid.Column="4" Text="{Binding LastLogin}" VerticalAlignment="Center"
                                                    FontSize="12" Margin="8,0,8,0" />
                                         <Button Grid.Column="5" Content="重置" Click="OnResetPassword" Tag="{Binding}"
+                                                IsVisible="{Binding CanManage}"
                                                 MinHeight="28" FontSize="12" HorizontalAlignment="Center"
                                                 Margin="4,0" />
                                         <Button Grid.Column="6" Content="改名" Click="OnRename" Tag="{Binding}"
+                                                IsVisible="{Binding CanManage}"
                                                 MinHeight="28" FontSize="12" HorizontalAlignment="Center"
                                                 Margin="4,0" />
                                         <Button Grid.Column="7" Content="{Binding ToggleLabel}" Click="OnToggleActive"
-                                                Tag="{Binding}" MinHeight="28" FontSize="12"
+                                                Tag="{Binding}" IsVisible="{Binding CanManage}"
+                                                MinHeight="28" FontSize="12"
                                                 Classes.danger="{Binding IsDeactivate}"
                                                 HorizontalAlignment="Center" Margin="4,0,12,0" />
                                     </Grid>

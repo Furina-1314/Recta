@@ -9,7 +9,7 @@ namespace Recta.App.Pages;
 
 public sealed record UserRowVm(
     string Id, string DisplayName, string Username, string RoleLabel, string StatusLabel,
-    IBrush StatusBrush, string LastLogin, string ToggleLabel, bool IsDeactivate);
+    IBrush StatusBrush, string LastLogin, string ToggleLabel, bool IsDeactivate, bool CanManage);
 
 public partial class UsersPage : UserControl, IRefreshable
 {
@@ -48,15 +48,21 @@ public partial class UsersPage : UserControl, IRefreshable
     private IBrush ThemeBrush(string key) =>
         (Application.Current?.FindResource(key) as IBrush) ?? Brushes.Gray;
 
-    private UserRowVm ToRow(UserDto u) => new(
-        u.Id, u.DisplayName, u.Username, RoleLabel(u.Role),
-        u.IsActive ? "启用" : "已停用",
-        u.IsActive
-            ? ThemeBrush("RectaPositiveBrush")
-            : ThemeBrush("RectaPendingBrush"),
-        u.LastLoginAt is { Length: >= 10 } t ? t[..10] : "从未登录",
-        u.IsActive ? "停用" : "启用",
-        u.IsActive);
+    private UserRowVm ToRow(UserDto u)
+    {
+        var isSelf = u.Id == AppServices.Session?.UserId;
+        return new UserRowVm(
+            u.Id, u.DisplayName + (isSelf ? "（本人）" : ""), u.Username, RoleLabel(u.Role),
+            u.IsActive ? "启用" : "已停用",
+            u.IsActive
+                ? ThemeBrush("RectaPositiveBrush")
+                : ThemeBrush("RectaPendingBrush"),
+            u.LastLoginAt is { Length: >= 10 } t ? t[..10] : "从未登录",
+            u.IsActive ? "停用" : "启用",
+            u.IsActive,
+            // 自保护:自己的行不提供重置/改名/停用(域层同样拒绝,双保险)。
+            CanManage: !isSelf);
+    }
 
     private static string RoleLabel(string role) => role switch
     {

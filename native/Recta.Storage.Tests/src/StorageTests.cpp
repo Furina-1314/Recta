@@ -15,6 +15,12 @@
 
 #include <gtest/gtest.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <string>
 
@@ -51,6 +57,33 @@ TEST_F(StorageTest, EnvConfigResolvesLocalFile) {
     const auto cs = recta::storage::LoadConnectionString();
     EXPECT_EQ(cs.substr(0, 13), "postgresql://");
     EXPECT_NE(cs.find("neon.tech"), std::string::npos);
+}
+
+// RECTA_ENV_FILE 显式指向测试文件时,连接串必须取自该文件(优先于 cwd 上溯的 .env.local)。
+TEST_F(StorageTest, EnvConfigHonorsEnvFileOverride) {
+    const auto path = std::filesystem::temp_directory_path() / "recta_env_override_test.env";
+    {
+        std::ofstream out(path, std::ios::binary | std::ios::trunc);
+        out << "# comment\n";
+        out << "DATABASE_URL=\"postgresql://override-host/testdb?sslmode=require\"\n";
+    }
+    _putenv(("RECTA_ENV_FILE=" + path.string()).c_str());
+    const auto cs = recta::storage::LoadConnectionString();
+    _putenv("RECTA_ENV_FILE=");
+    std::filesystem::remove(path);
+    EXPECT_EQ(cs, "postgresql://override-host/testdb?sslmode=require");
+}
+
+// 测试模式(RECTA_TEST_MODE=1)下禁止回退到 .env.local——测试实例永不可能静默连上生产。
+// 注意:必须用 CRT 的 _putenv——getenv 读的是 CRT 环境副本,
+// Win32 SetEnvironmentVariableA 的运行期改动 getenv 看不到。
+TEST_F(StorageTest, TestModeRefusesEnvLocalFallback) {
+    _putenv("RECTA_TEST_MODE=1");
+    _putenv("DATABASE_URL=");
+    _putenv("RECTA_ENV_FILE=");
+    // 测试运行目录上溯能找到仓库根的 .env.local(生产串);测试模式下必须拒绝。
+    EXPECT_THROW(recta::storage::LoadConnectionString(), std::runtime_error);
+    _putenv("RECTA_TEST_MODE=");
 }
 
 TEST_F(StorageTest, ConnectCommitPath) {

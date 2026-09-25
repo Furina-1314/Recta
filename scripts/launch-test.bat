@@ -10,18 +10,12 @@ REM  Reset test data: Neon Console "Reset from parent" on recta-test,
 REM               or run db/reset-test.sql in its SQL Editor.
 REM ============================================================
 
-set "DATABASE_URL="
 set "RECTA_TEST_MODE=1"
-if defined RECTA_TEST_DATABASE_URL set "DATABASE_URL=%RECTA_TEST_DATABASE_URL%"
-if defined DATABASE_URL goto :findapp
-
-if not exist "%~dp0..\.env.test.local" (
+set "RECTA_ENV_FILE=%~dp0..\.env.test.local"
+if not exist "%RECTA_ENV_FILE%" (
     echo [ERROR] .env.test.local not found next to the repo root.
     pause
     exit /b 1
-)
-for /f "usebackq tokens=1,* delims==" %%A in ("%~dp0..\.env.test.local") do (
-    if /i "%%A"=="DATABASE_URL" set "DATABASE_URL=%%~B"
 )
 
 :findapp

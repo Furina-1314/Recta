@@ -271,6 +271,14 @@ public partial class LedgerPage : UserControl, IRefreshable
         AddField("渠道", ChannelLabel(r.AccountCategory));
         AddField("申请日期", ShortDate(r.CreatedAt));
         AddField("提单人", NameOrId(_userNameById, r.ApplicantId));
+        if (r.ReviewerId is { } rid)
+        {
+            AddField("审批人", NameOrId(_userNameById, rid));
+        }
+        if (r.SettlerId is { } sid)
+        {
+            AddField("办结人", NameOrId(_userNameById, sid));
+        }
         AddField("申报金额", RectaClient.FormatMoney(r.AppliedAmountCents) + " 元");
         if (r.ApprovedAmountCents is { } a)
         {
@@ -281,13 +289,17 @@ public partial class LedgerPage : UserControl, IRefreshable
         {
             AddField("实际出账", RectaClient.FormatMoney(s) + " 元");
         }
+        if (r.Status == "REJECTED" && !string.IsNullOrEmpty(r.RejectCategoryLabel))
+        {
+            AddField("驳回原因", r.RejectCategoryLabel);
+        }
         if (!string.IsNullOrEmpty(r.ReviewNotes))
         {
-            AddField($"审批人·{NameOrId(_userNameById, r.ReviewerId)}的批复", r.ReviewNotes);
+            AddField("审批意见", r.ReviewNotes);
         }
         if (!string.IsNullOrEmpty(r.SettlementNotes))
         {
-            AddField($"办结人·{NameOrId(_userNameById, r.SettlerId)}的批复", r.SettlementNotes);
+            AddField("办结批复", r.SettlementNotes);
         }
         if (!string.IsNullOrEmpty(r.VoucherUrl))
         {

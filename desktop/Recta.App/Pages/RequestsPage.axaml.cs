@@ -148,6 +148,12 @@ public partial class RequestsPage : UserControl, IRefreshable
         ReqNoText.Text = $"单号 REQ-{r.Id:D6}";
         ReqTitleText.Text = $"{r.Title}({CategoryLabel(r.AccountCategory)})";
         ApplicantText.Text = _userNameById.TryGetValue(r.ApplicantId, out var name) ? name : r.ApplicantId;
+        ReviewerText.Text = r.ReviewerId is { } rid
+            ? (_userNameById.TryGetValue(rid, out var rname) ? rname : rid)
+            : "—";
+        SettlerText.Text = r.SettlerId is { } sid
+            ? (_userNameById.TryGetValue(sid, out var sname) ? sname : sid)
+            : "—";
 
         StatusText.Text = StatusLabel(r.Status);
         StatusText.Foreground = StatusBrush(r.Status);

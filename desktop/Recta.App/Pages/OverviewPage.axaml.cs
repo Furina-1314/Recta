@@ -40,11 +40,8 @@ public partial class OverviewPage : UserControl, IRefreshable
                 $"结余合计 {Format(overview.Custody.BalancesSumCents)} = " +
                 $"{Format(overview.Custody.CustodianCashCents)} − {Format(overview.Custody.AdvanceTotalCents)}";
             var conserved = overview.Custody.Conserved;
-            ConservationBadge.Text = conserved ? "账目平衡" : "账目异常";
-            var badgeParent = (Border)ConservationBadge.Parent!;
-            badgeParent.Background = conserved
-                ? (IBrush?)Application.Current!.FindResource("RectaPositiveBrush")
-                : (IBrush?)Application.Current!.FindResource("RectaDangerBrush");
+            BadgeOk.IsVisible = conserved;
+            BadgeBad.IsVisible = !conserved;
 
             PendingCount.Text = CountOf(overview, "PENDING_REVIEW").ToString();
             ApprovedCount.Text = CountOf(overview, "APPROVED").ToString();

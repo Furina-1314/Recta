@@ -58,8 +58,14 @@
                                VerticalAlignment="Center" Classes="money"
                                FontSize="18" Text="结余合计 0.00 = 0.00 − 0.00" />
                     <Border Grid.Column="2" Padding="10,4" VerticalAlignment="Center"
-                            Background="{DynamicResource RectaPositiveBrush}">
-                        <TextBlock x:Name="ConservationBadge" Text="账目平衡" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                            Background="{DynamicResource RectaPositiveBrush}"
+                            x:Name="BadgeOk">
+                        <TextBlock Text="账目平衡" Foreground="#FFFFFF" FontWeight="SemiBold" />
+                    </Border>
+                    <Border Grid.Column="2" Padding="10,4" VerticalAlignment="Center"
+                            Background="{DynamicResource RectaDangerBrush}"
+                            x:Name="BadgeBad" IsVisible="False">
+                        <TextBlock Text="账目异常" Foreground="#FFFFFF" FontWeight="SemiBold" />
                     </Border>
                 </Grid>
             </Border>

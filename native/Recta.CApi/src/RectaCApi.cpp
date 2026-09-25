@@ -948,8 +948,8 @@ struct SyncState {
     int64_t cursor = 0;
     bool listening = false;
     int reconnect_attempts = 0;
+    std::unique_ptr<recta::storage::NeonContext> pull_neon; // 复用连接,免每次握手
     std::string listen_conn_str;
-    std::string pull_conn_str;
 };
 
 SyncState& SyncS() {
@@ -989,8 +989,7 @@ std::string DeriveUnpooledConnectionString(const std::string& pooled) {
 
 void SyncPullSince() {
     auto& s = SyncS();
-    recta::storage::NeonContext neon(s.pull_conn_str);
-    auto events = neon.ExecuteTransaction([&](pqxx::work& tx) {
+    auto events = s.pull_neon->ExecuteTransaction([&](pqxx::work& tx) {
         return recta::storage::LedgerRepo::FetchChangeEventsSince(tx, s.cursor, 200);
     });
     const std::lock_guard<std::mutex> lock(s.mutex);
@@ -1062,12 +1061,12 @@ int32_t recta_sync_start(void) {
             return; // 已在运行
         }
 
-        s.pull_conn_str = Svc()->neon->connection_string();
-        s.listen_conn_str = DeriveUnpooledConnectionString(s.pull_conn_str);
+        const std::string pull_conn_str = Svc()->neon->connection_string();
+        s.listen_conn_str = DeriveUnpooledConnectionString(pull_conn_str);
+        s.pull_neon = std::make_unique<recta::storage::NeonContext>(pull_conn_str);
 
         // 游标对齐当前水位:只上报 start 之后的新事件。
-        recta::storage::NeonContext neon(s.pull_conn_str);
-        s.cursor = neon.ExecuteTransaction([](pqxx::work& tx) {
+        s.cursor = s.pull_neon->ExecuteTransaction([](pqxx::work& tx) {
             return tx.exec("SELECT COALESCE(MAX(seq), 0) FROM change_events")
                 .front()[0]
                 .as<int64_t>();

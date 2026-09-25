@@ -131,15 +131,24 @@
                             <TextBlock x:Name="ReqNoText" FontWeight="SemiBold" FontSize="16" />
                             <TextBlock x:Name="ReqTitleText" FontSize="15" TextWrapping="Wrap" />
 
-                            <Grid ColumnDefinitions="Auto,*" Margin="0,4,0,0">
+                            <Grid ColumnDefinitions="Auto,*,Auto" Margin="0,4,0,0">
                                 <StackPanel Spacing="6">
                                     <TextBlock Classes="secondary" Text="提单人" FontSize="12" />
                                     <TextBlock x:Name="ApplicantText" />
                                 </StackPanel>
-                                <StackPanel Grid.Column="1" HorizontalAlignment="Right" Spacing="6">
-                                    <TextBlock Classes="secondary" Text="状态" FontSize="12" />
-                                    <TextBlock x:Name="StatusText" FontWeight="SemiBold" />
+                                <StackPanel Grid.Column="1" HorizontalAlignment="Center" Spacing="6">
+                                    <TextBlock Classes="secondary" Text="审批人" FontSize="12" />
+                                    <TextBlock x:Name="ReviewerText" Text="—" />
                                 </StackPanel>
+                                <StackPanel Grid.Column="2" HorizontalAlignment="Right" Spacing="6">
+                                    <TextBlock Classes="secondary" Text="办结人" FontSize="12" />
+                                    <TextBlock x:Name="SettlerText" Text="—" />
+                                </StackPanel>
+                            </Grid>
+                            <Grid ColumnDefinitions="Auto,*" Margin="0,2,0,0">
+                                <TextBlock Classes="secondary" Text="状态" FontSize="12" />
+                                <TextBlock Grid.Column="1" x:Name="StatusText" FontWeight="SemiBold"
+                                           HorizontalAlignment="Right" />
                             </Grid>
 
                             <Border Height="1" Background="{DynamicResource RectaDividerBrush}" Margin="0,2" />

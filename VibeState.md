@@ -5,7 +5,8 @@
 - **最后更新**：2026-09-25
 - **当前阶段**：**P13 完成——全部 14 个 Phase 收官，v0.1.0 可交付**
 - **仓库**：https://github.com/Furina-1314/Recta
-- **最新 Release**：v0.1.0（2026-09-25，含全部迭代与修复；v0.0.1 为历史版本）
+- **最新 Release**：v0.2.0（2026-09-25，新增 CSV 导出；v0.1.0/v0.0.1 为历史版本）
+- **发布轨道**：每次功能里程碑 → 打 tag → `cmake -DRECTA_DEV_TOOLS=OFF` 重编 DLL → publish 载荷冒烟 → Inno 打包(/DAppVersion=x.y.z) → 静默装/跑/卸闭环 → `gh release create`
 
 ---
 

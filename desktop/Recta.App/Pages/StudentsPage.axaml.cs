@@ -14,6 +14,10 @@ public sealed record LedgerLineVm(
 
 public partial class StudentsPage : UserControl, IRefreshable
 {
+    private IReadOnlyList<StudentDto> _students = [];
+    private List<LedgerEntryDto> _studentLedger = [];
+    private StudentRowVm? _selectedStudent;
+
     // 主题画刷统一取用:控制级 FindResource 在部分时机返回 UnsetValue,
     // 改走 Application 资源并提供灰兜底。
     private IBrush ThemeBrush(string key) =>
@@ -51,6 +55,7 @@ public partial class StudentsPage : UserControl, IRefreshable
             AdvanceValue.Text = RectaClient.FormatMoney(overview.Custody.AdvanceTotalCents);
             ConservedValue.Text = overview.Custody.Conserved ? "平衡" : "异常!";
 
+            _students = students;
             Rows.ItemsSource = students.Select(s => new StudentRowVm(
                 s.StudentId, s.Name, s.BalanceCents,
                 RectaClient.FormatMoney(s.BalanceCents),
@@ -83,12 +88,15 @@ public partial class StudentsPage : UserControl, IRefreshable
         {
             return;
         }
+        _selectedStudent = row;
         RenameBox.IsEnabled = RenameButton.IsEnabled = true;
         DetailText.Text = $"{row.Name}({row.StudentId}):当前余额 {row.BalanceText} 元。" +
                           (row.BalanceCents < 0 ? "透支部分构成对生活委员个人的无息借贷。" : "结余由生活委员受托代管。");
         try
         {
             var entries = await ConnectionGate.RunAsync(() => AppServices.Client.ListStudentLedger(row.StudentId));
+            _studentLedger = [.. entries];
+            ExportLedgerButton.IsEnabled = entries.Count > 0;
             LedgerList.ItemsSource = entries.Select(entry => new LedgerLineVm(
                 TypeLabel(entry.EntryType),
                 entry.ChangeCents >= 0
@@ -100,9 +108,63 @@ public partial class StudentsPage : UserControl, IRefreshable
         }
         catch (RectaException ex)
         {
+            _studentLedger = [];
+            ExportLedgerButton.IsEnabled = false;
             LedgerList.ItemsSource = Array.Empty<LedgerLineVm>();
             DetailText.Text = $"流水加载失败:{ConnectionGate.Friendly(ex)}";
         }
+    }
+
+    private async void OnExportRoster(object? sender, RoutedEventArgs e)
+    {
+        if (_students.Count == 0)
+        {
+            SummaryText.Text = "名单为空,先在上方录入同学。";
+            return;
+        }
+        var file = await LedgerPage.PickSaveFileAsync(this, "导出分户名单", "Recta分户");
+        if (file is null)
+        {
+            return;
+        }
+        var data = new List<IReadOnlyList<string?>>();
+        data.Add(["学号", "姓名", "余额(元)"]);
+        foreach (var s2 in _students)
+        {
+            data.Add([s2.StudentId, s2.Name, RectaClient.FormatMoney(s2.BalanceCents)]);
+        }
+        var path = file.Path.LocalPath;
+        CsvExport.Write(path, data);
+        SummaryText.Text = $"已导出 {_students.Count} 名同学 → {path}";
+    }
+
+    private async void OnExportStudentLedger(object? sender, RoutedEventArgs e)
+    {
+        if (_selectedStudent is null || _studentLedger.Count == 0)
+        {
+            return;
+        }
+        var file = await LedgerPage.PickSaveFileAsync(this, "导出个人流水",
+            $"Recta流水_{_selectedStudent.Name}");
+        if (file is null)
+        {
+            return;
+        }
+        var data = new List<IReadOnlyList<string?>>();
+        data.Add(["日期", "类型", "变动(元)", "变动后余额(元)", "备注"]);
+        foreach (var entry in _studentLedger)
+        {
+            data.Add([
+                entry.CreatedAt is { Length: >= 10 } t ? t[..10] : "—",
+                TypeLabel(entry.EntryType),
+                (entry.ChangeCents > 0 ? "+" : "") + RectaClient.FormatMoney(entry.ChangeCents),
+                RectaClient.FormatMoney(entry.BalanceAfterCents),
+                entry.Notes ?? "",
+            ]);
+        }
+        var path = file.Path.LocalPath;
+        CsvExport.Write(path, data);
+        DetailText.Text = $"已导出 {_studentLedger.Count} 条流水 → {path}";
     }
 
     private static string TypeLabel(string entryType) => entryType switch

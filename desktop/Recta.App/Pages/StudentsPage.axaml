@@ -8,13 +8,20 @@
         <!-- 左:名单与对账 -->
         <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
 
-            <Grid ColumnDefinitions="*,Auto,Auto">
+            <Grid ColumnDefinitions="*,Auto,8,Auto">
                 <StackPanel Spacing="2">
                 <TextBlock Classes="page-title" Text="分户" Margin="0" />
                 <TextBlock Classes="secondary"
                            Text="每位同学的独立班费账户——余额为负表示暂由生活委员垫付,补缴后自动恢复" />
             </StackPanel>
-                <Button Grid.Column="2" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
+                <Button Grid.Column="1" VerticalAlignment="Bottom" Click="OnExportRoster"
+                        AutomationProperties.Name="导出分户名单">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="&#xE74E;" Classes="icon" />
+                        <TextBlock Text="导出" />
+                    </StackPanel>
+                </Button>
+                <Button Grid.Column="3" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
                     <TextBlock Text="&#xE72C;" Classes="icon" />
                 </Button>
             </Grid>
@@ -128,7 +135,12 @@
                 <Grid RowDefinitions="Auto,*">
                     <Border Background="{DynamicResource RectaPaneBrush}" Padding="20,10"
                             BorderBrush="{DynamicResource RectaDividerBrush}" BorderThickness="0,0,0,1">
-                        <TextBlock Text="历史流水" FontWeight="SemiBold" />
+                        <Grid ColumnDefinitions="*,Auto">
+                            <TextBlock Text="历史流水" FontWeight="SemiBold" />
+                            <Button Grid.Column="1" x:Name="ExportLedgerButton" Content="导出此流水"
+                                    Click="OnExportStudentLedger" MinHeight="26" FontSize="12"
+                                    IsEnabled="False" HorizontalAlignment="Right" Margin="0,-4,0,0" />
+                        </Grid>
                     </Border>
                     <ScrollViewer Grid.Row="1">
                         <ItemsControl x:Name="LedgerList" Margin="16,10">

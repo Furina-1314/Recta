@@ -19,6 +19,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Recta.App.NativeInterop\Recta.App.NativeInterop.csproj" />
+    <ProjectReference Include="..\Recta.App\Recta.App.csproj" />
   </ItemGroup>
 
   <!-- 原生 DLL 存在时随测试输出(先构建 native/,后 dotnet test)。 -->

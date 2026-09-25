@@ -167,6 +167,54 @@ public partial class LedgerPage : UserControl, IRefreshable
 
     private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
 
+    private async void OnExport(object? sender, RoutedEventArgs e)
+    {
+        if (Rows.ItemsSource is not List<LedgerRowVm> rows || rows.Count == 0)
+        {
+            SummaryText.Text = "没有可导出的流水,请先刷新或调整筛选。";
+            return;
+        }
+        var file = await PickSaveFileAsync(this, "导出流水", "Recta流水");
+        if (file is null)
+        {
+            return;
+        }
+        var data = new List<IReadOnlyList<string?>>();
+        data.Add(["单号", "类型", "渠道", "事项 / 来源", "金额(元)", "日期"]);
+        foreach (var r in rows)
+        {
+            data.Add([r.No, r.Kind == "EXPENSE" ? "支出" : "入账", r.ChannelLabel, r.Title,
+                      r.AmountText, r.DateText]);
+        }
+        var path = file.Path.LocalPath;
+        CsvExport.Write(path, data);
+        SummaryText.Text = $"已导出 {rows.Count} 条流水 → {path}";
+    }
+
+    internal static async Task<Avalonia.Platform.Storage.IStorageFile?> PickSaveFileAsync(
+        Visual owner, string title, string suggestedName)
+    {
+        var storage = TopLevel.GetTopLevel(owner)?.StorageProvider;
+        if (storage is null)
+        {
+            return null;
+        }
+        return await storage.SaveFilePickerAsync(new Avalonia.Platform.Storage.FilePickerSaveOptions
+        {
+            Title = title,
+            SuggestedFileName = $"{suggestedName}_{DateTime.Now:yyyyMMdd_HHmmss}",
+            DefaultExtension = "csv",
+            FileTypeChoices =
+            [
+                new Avalonia.Platform.Storage.FilePickerFileType("CSV 文件")
+                {
+                    Patterns = ["*.csv"],
+                    MimeTypes = ["text/csv"],
+                },
+            ],
+        });
+    }
+
     private async void OnNewEntry(object? sender, RoutedEventArgs e)
     {
         var dialog = new Windows.NewRequestDialog();

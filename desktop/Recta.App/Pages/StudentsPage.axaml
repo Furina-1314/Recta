@@ -11,8 +11,6 @@
             <Grid ColumnDefinitions="*,Auto,8,Auto">
                 <StackPanel Spacing="2">
                 <TextBlock Classes="page-title" Text="分户" Margin="0" />
-                <TextBlock Classes="secondary"
-                           Text="每位同学的独立班费账户——余额为负表示暂由生活委员垫付,补缴后自动恢复" />
             </StackPanel>
                 <Button Grid.Column="1" VerticalAlignment="Bottom" Click="OnExportRoster"
                         AutomationProperties.Name="导出分户名单">
@@ -126,8 +124,7 @@
             <Border Classes="card" Padding="20,14">
                 <StackPanel Spacing="8">
                     <TextBlock Text="个人分户详情" FontWeight="SemiBold" />
-                    <TextBlock x:Name="DetailText" Classes="secondary" TextWrapping="Wrap"
-                               Text="在左侧选择同学查看详情与流水。" />
+                    <TextBlock x:Name="DetailText" Classes="secondary" TextWrapping="Wrap" />
                 </StackPanel>
             </Border>
 

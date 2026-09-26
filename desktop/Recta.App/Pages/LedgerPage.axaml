@@ -11,8 +11,6 @@
             <Grid ColumnDefinitions="*,Auto,8,Auto,8,Auto">
                 <StackPanel Spacing="2">
                     <TextBlock Classes="page-title" Text="账目" Margin="0" />
-                    <TextBlock Classes="secondary"
-                               Text="全部资金流水的统一台账——支出单据与入账记录,点击任意一条查看完整来龙去脉" />
                 </StackPanel>
                 <Button Grid.Column="1" x:Name="ExportButton" VerticalAlignment="Bottom" Click="OnExport"
                         AutomationProperties.Name="导出流水">

@@ -14,7 +14,7 @@ public partial class MainWindow : Window
 {
     private static readonly (string Tag, string Label, string Glyph)[] NavSpec =
     [
-        ("overview",  "大盘", "\uE80F"),
+        ("overview",  "总览", "\uE80F"),
         ("requests",  "审批", "\uE8A5"),
         ("ledger",    "账目", "\uE8C7"),
         ("students",  "分户", "\uE716"),

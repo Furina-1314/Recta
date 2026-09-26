@@ -12,7 +12,6 @@
             <Grid ColumnDefinitions="*,Auto,12,Auto">
                 <StackPanel Spacing="2">
                     <TextBlock Classes="page-title" Text="审批" Margin="0" />
-                    <TextBlock Classes="secondary" Text="全部资金申请单据——先审批、后办结,每一步都有迹可循" />
                 </StackPanel>
                 <Button Grid.Column="1" x:Name="NewRequestButton" VerticalAlignment="Bottom" Click="OnToggleNewRequest">
                     <StackPanel Orientation="Horizontal" Spacing="8">

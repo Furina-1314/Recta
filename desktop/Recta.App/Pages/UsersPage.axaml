@@ -8,8 +8,6 @@
         <Grid ColumnDefinitions="*,Auto">
             <StackPanel Spacing="2">
                 <TextBlock Classes="page-title" Text="用户" Margin="0" />
-                <TextBlock Classes="secondary"
-                           Text="班委账号管理——开立账号、分配角色、重置密码与停用启用(仅团支书)" />
             </StackPanel>
             <Button Grid.Column="1" VerticalAlignment="Bottom" Click="OnRefresh" AutomationProperties.Name="刷新">
                 <TextBlock Text="&#xE72C;" Classes="icon" />
@@ -32,7 +30,6 @@
                 </Grid>
                 <Grid ColumnDefinitions="Auto,12,2*,12,Auto,12,*">
                     <TextBlock x:Name="TempPasswordLabel" Classes="secondary" FontSize="12"
-                               Text="临时口令(只显示这一次,请立即转交):" IsVisible="False"
                                VerticalAlignment="Center" />
                     <TextBox Grid.Column="2" x:Name="TempPasswordBox" IsReadOnly="True" IsVisible="False"
                              FontFamily="Cascadia Mono,Consolas" FontWeight="SemiBold" />

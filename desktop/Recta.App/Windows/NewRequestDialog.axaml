@@ -75,7 +75,7 @@
                             </ComboBox>
                         </StackPanel>
                     </Grid>
-                    <ScrollViewer MaxHeight="170" Classes="card" Padding="8,8,8,12">
+                    <Border Classes="card" Padding="8,8,8,12">
                         <ItemsControl x:Name="StudentChecks" Margin="0,0,0,2">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:StudentCheckVm">
@@ -84,7 +84,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                    </Border>
                     <TextBlock x:Name="SplitPreview" Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="—" />
                 </StackPanel>
             </StackPanel>
@@ -124,7 +124,7 @@
                         <TextBlock Classes="secondary" FontSize="12"
                                    Text="勾选充值对象(可多选)——每人统一充入上方金额，任一失败整体不生效" />
                     </StackPanel>
-                    <ScrollViewer MaxHeight="170" Classes="card" Padding="8,8,8,12">
+                    <Border Classes="card" Padding="8,8,8,12">
                         <ItemsControl x:Name="IncomeChecks" Margin="0,0,0,2">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:StudentCheckVm">
@@ -133,7 +133,7 @@
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
-                    </ScrollViewer>
+                    </Border>
                 </StackPanel>
 
                 <!-- 关联报销单(核销) -->

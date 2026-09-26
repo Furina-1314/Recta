@@ -55,7 +55,8 @@
         <Setter Property="Template">
             <ControlTemplate>
                 <Panel>
-                    <Border x:Name="SelectionSurface" />
+                    <!-- Transparent 而非空:null 背景不参与命中测试,悬停空白处事件会穿透 -->
+                    <Border x:Name="SelectionSurface" Background="Transparent" />
                     <ContentPresenter x:Name="ContentHost"
                                       Content="{TemplateBinding Content}"
                                       ContentTemplate="{TemplateBinding ContentTemplate}"

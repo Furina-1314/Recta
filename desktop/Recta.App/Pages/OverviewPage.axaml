@@ -6,11 +6,9 @@
         <StackPanel Margin="28,24" Spacing="16" MaxWidth="1080">
 
             <Grid ColumnDefinitions="*,Auto">
-                <TextBlock Text="大盘" Classes="page-title" Margin="0" />
+                <TextBlock Text="总览" Classes="page-title" Margin="0" />
                 <Button Grid.Column="1" Content="刷新" Click="OnRefresh" VerticalAlignment="Bottom" />
             </Grid>
-            <TextBlock Text="全班班费总账实时总览——结余、代管与垫资一目了然"
-                       Classes="secondary" Margin="0,0,0,4" />
 
             <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap"
                        IsVisible="False" />

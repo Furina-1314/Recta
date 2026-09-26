@@ -40,6 +40,7 @@
 | `native/` | C++20 核心：领域内核 / 存储 / 服务 / C ABI |
 | `desktop/` | Avalonia 前端：Recta.App / NativeInterop / 测试 |
 | `db/schema/001_init.sql` | 数据库初始化 DDL（版本化） |
+| [`docs/使用指南.md`](docs/使用指南.md) | 使用指南：安装、各模块操作、测试库、常见问题 |
 | `docs/images/` | 界面截图 |
 
 ## 构建与运行（Windows）

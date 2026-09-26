@@ -4,7 +4,7 @@ using Avalonia.Platform;
 
 namespace Recta.App;
 
-// 品牌资产:窗口图标(Assets/RectaLogo-256.png,与 Equora 同构的蓝底白 R)。
+// 品牌资产:窗口图标(Assets/RectaLogo-256.png,蓝底白色大写 R)。
 public static class Branding
 {
     private static WindowIcon? _icon;

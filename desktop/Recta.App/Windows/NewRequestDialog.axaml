@@ -8,7 +8,6 @@
         Background="{DynamicResource RectaCanvasBrush}"
         FontSize="14">
 
-    <ScrollViewer>
         <StackPanel Margin="28,22" Spacing="12" MaxWidth="560">
 
             <!-- 类型切换:支出 / 入账 -->
@@ -75,16 +74,18 @@
                             </ComboBox>
                         </StackPanel>
                     </Grid>
-                    <Border Classes="card" Padding="8,8,8,12">
-                        <ItemsControl x:Name="StudentChecks" Margin="0,0,0,2">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="local:StudentCheckVm">
-                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                              Content="{Binding Label}" Margin="6,3" FontSize="13" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Border>
+                    <ScrollViewer MaxHeight="240" HorizontalScrollBarVisibility="Disabled">
+                        <Border Classes="card" Padding="8,8,8,16">
+                            <ItemsControl x:Name="StudentChecks" Margin="0,0,0,2">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:StudentCheckVm">
+                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                  Content="{Binding Label}" Margin="6,3" FontSize="13" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </ScrollViewer>
                     <TextBlock x:Name="SplitPreview" Classes="secondary" FontSize="12" TextWrapping="Wrap" Text="—" />
                 </StackPanel>
             </StackPanel>
@@ -124,16 +125,18 @@
                         <TextBlock Classes="secondary" FontSize="12"
                                    Text="勾选充值对象(可多选)——每人统一充入上方金额，任一失败整体不生效" />
                     </StackPanel>
-                    <Border Classes="card" Padding="8,8,8,12">
-                        <ItemsControl x:Name="IncomeChecks" Margin="0,0,0,2">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="local:StudentCheckVm">
-                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                              Content="{Binding Label}" Margin="6,3" FontSize="13" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </Border>
+                    <ScrollViewer MaxHeight="240" HorizontalScrollBarVisibility="Disabled">
+                        <Border Classes="card" Padding="8,8,8,16">
+                            <ItemsControl x:Name="IncomeChecks" Margin="0,0,0,2">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="local:StudentCheckVm">
+                                        <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                  Content="{Binding Label}" Margin="6,3" FontSize="13" />
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Border>
+                    </ScrollViewer>
                 </StackPanel>
 
                 <!-- 关联报销单(核销) -->
@@ -157,5 +160,4 @@
             <Button Classes="accent" Content="确认提交" Click="OnSubmit" HorizontalAlignment="Stretch" Margin="0,4,0,0" />
 
         </StackPanel>
-    </ScrollViewer>
 </Window>

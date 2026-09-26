@@ -19,12 +19,12 @@ foreach ($size in $sizes) {
     $graphics.PixelOffsetMode = [System.Drawing.Drawing2D.PixelOffsetMode]::HighQuality
     $graphics.Clear($blue)
     $scale = $sourceSize / 256.0
-    # Centered, square-shouldered R with a longer, broader lower leg.
+    # Centered, square-shouldered R with a long outward leg at the same stroke width.
     $outer = @(
-        @(56,32), @(200,32), @(200,128), @(136,128), @(200,224),
-        @(148,224), @(100,160), @(88,160), @(88,224), @(56,224)
+        @(48,32), @(192,32), @(192,128), @(128,128), @(208,224),
+        @(166,224), @(103,148), @(80,148), @(80,224), @(48,224)
     )
-    $inner = @(@(88,64), @(168,64), @(168,96), @(88,96))
+    $inner = @(@(80,64), @(160,64), @(160,96), @(80,96))
     foreach ($shape in @(@{ Points = $outer; Color = $white }, @{ Points = $inner; Color = $blue })) {
         $points = [System.Drawing.PointF[]]::new($shape.Points.Count)
         for ($i = 0; $i -lt $shape.Points.Count; $i++) {

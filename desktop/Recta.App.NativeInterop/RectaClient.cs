@@ -148,6 +148,16 @@ public sealed class RectaClient
         Check(RectaNative.recta_record_inflow(actorId, payload));
     }
 
+    /// <summary>班费批量充值:单事务内为多名同学各充等额一笔(原子)。返回实际人数。</summary>
+    public int RecordInflowBatch(string actorId, string sourceTitle, long amountCents,
+                                 string? voucherUrl, IReadOnlyList<string> studentIds)
+    {
+        var idsJson = JsonSerializer.Serialize(studentIds);
+        var rc = RectaNative.recta_record_inflow_batch(actorId, sourceTitle, amountCents,
+                                                       voucherUrl, idsJson, out var count);
+        return rc >= 0 ? count : throw ToException(rc);
+    }
+
     public void AddStudent(string actorId, string studentId, string name)
     {
         Check(RectaNative.recta_add_student(actorId, studentId, name));

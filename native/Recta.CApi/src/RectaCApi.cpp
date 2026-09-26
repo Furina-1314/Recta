@@ -587,6 +587,25 @@ int32_t recta_record_inflow(const char* actor_id, const char* inflow_json) {
     });
 }
 
+int32_t recta_record_inflow_batch(const char* actor_id, const char* source_title,
+                                  int64_t amount_cents, const char* voucher_url,
+                                  const char* student_ids_json, int32_t* out_count) {
+    return Call([&] {
+        RequireReady();
+        if (out_count == nullptr) throw std::invalid_argument("out_count 为空");
+        const json ids = json::parse(ReqStr(student_ids_json));
+        if (!ids.is_array()) throw std::invalid_argument("student_ids_json 必须是字符串数组");
+        std::vector<std::string> student_ids;
+        for (const auto& item : ids) {
+            if (!item.is_string()) throw std::invalid_argument("student_ids_json 必须是字符串数组");
+            student_ids.push_back(item.get<std::string>());
+        }
+        *out_count = Svc()->workflow->RecordInflowBatch(
+            ReqStr(actor_id), ReqStr(source_title), recta::Money(amount_cents),
+            OptStr(voucher_url), student_ids);
+    });
+}
+
 int32_t recta_add_student(const char* actor_id, const char* student_id, const char* name) {
     return Call([&] {
         RequireReady();

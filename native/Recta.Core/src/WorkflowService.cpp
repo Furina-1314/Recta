@@ -16,6 +16,7 @@
 #include <format>
 #include <map>
 #include <optional>
+#include <unordered_set>
 
 namespace recta::core {
 namespace {
@@ -72,6 +73,35 @@ AccountCategory RequireCategoryOf(pqxx::work& tx, int request_id) {
 
 std::string FormatYuan(int64_t cents) {
     return Money(cents).to_plain_string();
+}
+
+void AppendChangeEvent(pqxx::work& tx, const char* entity_type, int64_t entity_id,
+                       const char* event_type, const std::string& payload);
+
+// 班费充值单笔入账(调用方负责:操作者校验/分户存在性/守恒校验)。
+void ApplyStudentRecharge(pqxx::work& tx, const std::string& student_id, Money amount,
+                          const std::string& source_title,
+                          const std::optional<std::string>& voucher_url,
+                          const std::string& operator_id) {
+    const int64_t amount_cents = amount.to_cents();
+    const int64_t balance_after =
+        storage::StudentAccountsRepo::ApplyCredit(tx, student_id, amount_cents);
+
+    const int64_t inflow_id = storage::LedgerRepo::InsertInflow(
+        tx, amount_cents, source_title, ToString(InflowDestination::ToStudentSubAccount),
+        student_id, std::nullopt, operator_id, voucher_url);
+
+    storage::LedgerEntry entry;
+    entry.student_id = student_id;
+    entry.inflow_record_id = inflow_id;
+    entry.entry_type = "RECHARGE";
+    entry.change_cents = amount_cents;
+    entry.balance_after_cents = balance_after;
+    entry.notes = source_title;
+    storage::LedgerRepo::AppendLedger(tx, entry);
+    AppendChangeEvent(tx, "inflow", inflow_id, "CREATED",
+                      std::format(R"({{"inflow_id":{},"amount_cents":{},"student":"{}"}})",
+                                  inflow_id, amount_cents, student_id));
 }
 
 void AppendChangeEvent(pqxx::work& tx, const char* entity, int64_t entity_id,
@@ -408,30 +438,14 @@ void WorkflowService::RecordInflow(const std::string& actor_id, const InflowInpu
             if (!storage::StudentAccountsRepo::Find(tx, *input.target_student_id)) {
                 throw std::invalid_argument("目标分户不存在: " + *input.target_student_id);
             }
-            const int64_t balance_after = storage::StudentAccountsRepo::ApplyCredit(
-                tx, *input.target_student_id, amount);
-
-            const int64_t inflow_id = storage::LedgerRepo::InsertInflow(
-                tx, amount, input.source_title, destination_name, input.target_student_id,
-                input.related_request_id, actor_id, input.voucher_url);
-
-            storage::LedgerEntry entry;
-            entry.student_id = input.target_student_id;
-            entry.inflow_record_id = inflow_id;
-            entry.entry_type = "RECHARGE";
-            entry.change_cents = amount;
-            entry.balance_after_cents = balance_after;
-            entry.notes = input.source_title;
-            storage::LedgerRepo::AppendLedger(tx, entry);
+            ApplyStudentRecharge(tx, *input.target_student_id, input.amount, input.source_title,
+                                 input.voucher_url, actor_id);
 
             const auto custody = storage::StudentAccountsRepo::AggregateCustody(tx);
             if (!IsConserved(Money(custody.balances_sum), Money(custody.custodian_cash),
                              Money(custody.advance_total))) {
                 throw std::logic_error("充值后守恒校验失败，事务回滚");
             }
-            AppendChangeEvent(tx, "inflow", inflow_id, "CREATED",
-                              std::format(R"({{"inflow_id":{},"amount_cents":{},"student":"{}"}})",
-                                          inflow_id, amount, *input.target_student_id));
         } else {
             const char* account_type =
                 input.destination == InflowDestination::ToFlexibleAccount ? "FLEXIBLE_PUBLIC"
@@ -482,6 +496,47 @@ void WorkflowService::RecordInflow(const std::string& actor_id, const InflowInpu
                                           amount));
         }
         return 0;
+    });
+}
+
+int WorkflowService::RecordInflowBatch(const std::string& actor_id, const std::string& source_title,
+                                       Money amount, const std::optional<std::string>& voucher_url,
+                                       const std::vector<std::string>& student_ids) {
+    if (amount.to_cents() <= 0) {
+        throw std::invalid_argument("充值金额必须为正数(分)");
+    }
+    if (source_title.empty()) {
+        throw std::invalid_argument("入账来源凭据必填(§5.3)");
+    }
+    if (student_ids.empty()) {
+        throw std::invalid_argument("请勾选至少一名充值对象");
+    }
+    if (std::unordered_set<std::string>(student_ids.begin(), student_ids.end()).size() !=
+        student_ids.size()) {
+        throw std::invalid_argument("充值对象存在重复学号");
+    }
+
+    return context_.ExecuteTransaction([&](pqxx::work& tx) -> int {
+        const auto actor = RequireActiveUser(tx, actor_id);
+        if (RoleOf(actor) != Role::LifeCommittee) {
+            throw PermissionDeniedException("权限拒绝：同学班费充值仅生活委员可确认");
+        }
+        // 先校验全部分户存在,再逐笔入账(任一不存在则整体失败)。
+        for (const auto& id : student_ids) {
+            if (!storage::StudentAccountsRepo::Find(tx, id)) {
+                throw std::invalid_argument("目标分户不存在: " + id);
+            }
+        }
+        for (const auto& id : student_ids) {
+            ApplyStudentRecharge(tx, id, amount, source_title, voucher_url, actor_id);
+        }
+
+        const auto custody = storage::StudentAccountsRepo::AggregateCustody(tx);
+        if (!IsConserved(Money(custody.balances_sum), Money(custody.custodian_cash),
+                         Money(custody.advance_total))) {
+            throw std::logic_error("批量充值后守恒校验失败，事务回滚");
+        }
+        return static_cast<int>(student_ids.size());
     });
 }
 

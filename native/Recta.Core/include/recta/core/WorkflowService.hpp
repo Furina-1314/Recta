@@ -17,6 +17,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <vector>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -84,6 +85,12 @@ public:
 
     // 入账引擎三通道(§5.3)。操作人权限按渠道硬校验。
     void RecordInflow(const std::string& actor_id, const InflowInput& input);
+
+    // 班费批量充值:单事务内为多名同学各记一笔等额充值(任一失败整体回滚)。
+    // 仅生活委员;学号不可重复;返回实际充值人数。
+    [[nodiscard]] int RecordInflowBatch(const std::string& actor_id, const std::string& source_title,
+                                        Money amount, const std::optional<std::string>& voucher_url,
+                                        const std::vector<std::string>& student_ids);
 
 private:
     storage::NeonContext& context_;

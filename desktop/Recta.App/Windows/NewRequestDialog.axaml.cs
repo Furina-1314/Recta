@@ -29,14 +29,13 @@ public sealed class StudentCheckVm : INotifyPropertyChanged
     public event PropertyChangedEventHandler? PropertyChanged;
 }
 
-public sealed record StudentComboVm(string StudentId, string Label);
-
 public sealed record RelatedRequestVm(int RequestId, string Label);
 
-/// <summary>统一提单入口:支出提单(三渠道)或入账登记(三通道)。</summary>
+/// <summary>统一提单入口:支出提单(三渠道)或入账登记(三通道,班费充值支持批量)。</summary>
 public partial class NewRequestDialog : Window
 {
     private readonly ObservableCollection<StudentCheckVm> _students = [];
+    private readonly ObservableCollection<StudentCheckVm> _incomeStudents = [];
     private bool _incomeMode;
 
     /// <summary>提交成功时为 true(调用方负责刷新)。</summary>
@@ -46,6 +45,7 @@ public partial class NewRequestDialog : Window
     {
         InitializeComponent();
         StudentChecks.ItemsSource = _students;
+        IncomeChecks.ItemsSource = _incomeStudents;
         Loaded += async (_, _) => await LoadLookupsAsync();
     }
 
@@ -60,19 +60,22 @@ public partial class NewRequestDialog : Window
             var students = await ConnectionGate.RunAsync(() => AppServices.Client.ListStudents());
             foreach (var s in students)
             {
-                var option = new StudentCheckVm { StudentId = s.StudentId, Label = $"{s.Name}({s.StudentId})" };
-                option.PropertyChanged += (_, _) =>
+                var label = $"{s.Name}({s.StudentId})";
+
+                // 支出平摊名单
+                var expenseOption = new StudentCheckVm { StudentId = s.StudentId, Label = label };
+                expenseOption.PropertyChanged += (_, _) =>
                 {
                     RefreshTailBearers();
+                    UpdateSplitSelectAllState();
                     UpdatePreview();
                 };
-                _students.Add(option);
-            }
-            IncomeStudentBox.ItemsSource = students
-                .Select(s => new StudentComboVm(s.StudentId, $"{s.Name}({s.StudentId})")).ToList();
-            if (IncomeStudentBox.ItemCount > 0)
-            {
-                IncomeStudentBox.SelectedIndex = 0;
+                _students.Add(expenseOption);
+
+                // 入账充值对象
+                var incomeOption = new StudentCheckVm { StudentId = s.StudentId, Label = label };
+                incomeOption.PropertyChanged += (_, _) => UpdateIncomeSelectAllState();
+                _incomeStudents.Add(incomeOption);
             }
         }
         catch (RectaException)
@@ -117,7 +120,8 @@ public partial class NewRequestDialog : Window
 
     // ---------- 支出 ----------
 
-    private string SelectedChannel => (ChannelBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
+    private string SelectedChannel =>
+        (ChannelBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
 
     private void OnChannelChanged(object? sender, SelectionChangedEventArgs e)
     {
@@ -141,6 +145,23 @@ public partial class NewRequestDialog : Window
         UpdatePreview();
     }
 
+    private void OnSplitSelectAll(object? sender, RoutedEventArgs e)
+    {
+        // 语义:当前未全选 → 全选;已全选 → 取消全部。
+        var target = !_students.All(s => s.IsChecked);
+        foreach (var option in _students)
+        {
+            option.IsChecked = target;
+        }
+    }
+
+    private void UpdateSplitSelectAllState()
+    {
+        SplitSelectAll.IsChecked = _students.Count > 0 && _students.All(s => s.IsChecked)
+            ? true
+            : _students.Any(s => s.IsChecked) ? null : false;
+    }
+
     private void UpdatePreview()
     {
         SplitPreview.Text = "—";
@@ -160,10 +181,13 @@ public partial class NewRequestDialog : Window
             var perHead = result.Allocations.FirstOrDefault(a => !a.IsTailBearer)?.AmountCents
                           ?? result.Allocations[0].AmountCents;
             var tail = result.Allocations.FirstOrDefault(a => a.IsTailBearer);
+            var bearerName = bearer.Label.Contains('(')
+                ? bearer.Label[..bearer.Label.IndexOf('(')]
+                : bearer.Label;
             SplitPreview.Text =
                 $"共 {result.Count} 人参摊:人均 {RectaClient.FormatMoney(perHead)} 元" +
                 (tail is not null && tail.AmountCents != perHead
-                    ? $";尾差承担人 {bearer.Label[..bearer.Label.IndexOf('(')]} 扣 {RectaClient.FormatMoney(tail.AmountCents)} 元"
+                    ? $";尾差承担人 {bearerName} 扣 {RectaClient.FormatMoney(tail.AmountCents)} 元"
                     : ";无尾差(整除)") +
                 $";分项合计 {RectaClient.FormatMoney(result.SumCents)} 元";
         }
@@ -173,7 +197,7 @@ public partial class NewRequestDialog : Window
         }
     }
 
-    // ---------- 增资 ----------
+    // ---------- 入账 ----------
 
     private string SelectedIncomeKind =>
         (IncomeKindBox.SelectedItem as ComboBoxItem)?.Tag as string ?? "";
@@ -181,8 +205,24 @@ public partial class NewRequestDialog : Window
     private void OnIncomeKindChanged(object? sender, SelectionChangedEventArgs e)
     {
         var kind = SelectedIncomeKind;
-        IncomeStudentSection.IsVisible = kind == "TO_STUDENT_SUB_ACCOUNT";
+        IncomeStudentsSection.IsVisible = kind == "TO_STUDENT_SUB_ACCOUNT";
         IncomeRequestSection.IsVisible = kind == "TO_FACULTY_REIMBURSE";
+    }
+
+    private void OnIncomeSelectAll(object? sender, RoutedEventArgs e)
+    {
+        var target = !_incomeStudents.All(s => s.IsChecked);
+        foreach (var option in _incomeStudents)
+        {
+            option.IsChecked = target;
+        }
+    }
+
+    private void UpdateIncomeSelectAllState()
+    {
+        IncomeSelectAll.IsChecked = _incomeStudents.Count > 0 && _incomeStudents.All(s => s.IsChecked)
+            ? true
+            : _incomeStudents.Any(s => s.IsChecked) ? null : false;
     }
 
     // ---------- 提交 ----------
@@ -275,29 +315,38 @@ public partial class NewRequestDialog : Window
         }
         var voucher = (IncomeVoucherBox.Text ?? "").Trim();
 
-        string? targetStudent = null;
-        int? relatedRequest = null;
         switch (kind)
         {
             case "TO_STUDENT_SUB_ACCOUNT":
-                targetStudent = (IncomeStudentBox.SelectedItem as StudentComboVm)?.StudentId;
-                if (targetStudent is null)
+            {
+                // 批量充值:勾选的同学每人统一充入等额,单事务原子。
+                var ids = _incomeStudents.Where(s => s.IsChecked).Select(s => s.StudentId).ToList();
+                if (ids.Count == 0)
                 {
-                    throw new RectaException(RectaErrors.InvalidArg, "请选择充值对象。");
+                    throw new RectaException(RectaErrors.InvalidArg, "请勾选充值对象。");
                 }
+                await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflowBatch(
+                    session.UserId, source, cents, voucher.Length == 0 ? null : voucher, ids));
                 break;
+            }
             case "TO_FACULTY_REIMBURSE":
-                relatedRequest = (IncomeRequestBox.SelectedItem as RelatedRequestVm)?.RequestId;
-                if (relatedRequest is null)
+            {
+                var related = (IncomeRequestBox.SelectedItem as RelatedRequestVm)?.RequestId;
+                if (related is null)
                 {
                     throw new RectaException(RectaErrors.InvalidArg, "系报销核销必须关联一笔已办结的报销单。");
                 }
+                await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
+                    session.UserId, kind, cents, source, null, related,
+                    voucher.Length == 0 ? null : voucher));
+                break;
+            }
+            default:
+                await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
+                    session.UserId, kind, cents, source, null, null,
+                    voucher.Length == 0 ? null : voucher));
                 break;
         }
-
-        await ConnectionGate.RunAsync(() => AppServices.Client.RecordInflow(
-            session.UserId, kind, cents, source, targetStudent, relatedRequest,
-            voucher.Length == 0 ? null : voucher));
     }
 
     private void ShowError(string message)

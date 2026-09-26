@@ -86,6 +86,10 @@ RECTA_API int32_t recta_settle_request(const char* actor_id, int32_t request_id,
 /* inflow_json: {"destination":"TO_...","amount_cents":N,"source_title":"...",
                  "target_student_id":".."?,"related_request_id":N?,"voucher_url":".."?} */
 RECTA_API int32_t recta_record_inflow(const char* actor_id, const char* inflow_json);
+/* 班费批量充值:单事务内为 ids_json 中每名同学各充等额一笔(原子)。返回实际人数。 */
+RECTA_API int32_t recta_record_inflow_batch(const char* actor_id, const char* source_title,
+                                            int64_t amount_cents, const char* voucher_url,
+                                            const char* student_ids_json, int32_t* out_count);
 RECTA_API int32_t recta_add_student(const char* actor_id, const char* student_id,
                                     const char* name);
 RECTA_API int32_t recta_rename_student(const char* actor_id, const char* student_id,

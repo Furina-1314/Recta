@@ -92,6 +92,12 @@ internal static partial class RectaNative
     internal static partial int recta_record_inflow(string actor_id, string inflow_json);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
+    internal static partial int recta_record_inflow_batch(string actor_id, string source_title,
+                                                          long amount_cents, string? voucher_url,
+                                                          string student_ids_json,
+                                                          out int out_count);
+
+    [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]
     internal static partial int recta_add_student(string actor_id, string student_id, string name);
 
     [LibraryImport(Lib, StringMarshalling = StringMarshalling.Utf8)]

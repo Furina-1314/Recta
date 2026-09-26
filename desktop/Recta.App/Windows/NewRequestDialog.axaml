@@ -3,7 +3,7 @@
         xmlns:local="clr-namespace:Recta.App.Windows"
         x:Class="Recta.App.Windows.NewRequestDialog"
         Title="新提单"
-        Width="620" Height="640" CanResize="False"
+        Width="620" Height="700" CanResize="False"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource RectaCanvasBrush}"
         FontSize="14">
@@ -11,7 +11,7 @@
     <ScrollViewer>
         <StackPanel Margin="28,22" Spacing="12" MaxWidth="560">
 
-            <!-- 类型切换:支出 / 增资 -->
+            <!-- 类型切换:支出 / 入账 -->
             <Grid ColumnDefinitions="*,12,*">
                 <Button x:Name="ExpenseTab" Classes="accent" Click="OnTabExpense" FontSize="15">
                     <StackPanel Orientation="Horizontal" Spacing="10">
@@ -32,8 +32,7 @@
                 <Grid ColumnDefinitions="*,12,2*">
                     <StackPanel Spacing="6">
                         <TextBlock Classes="secondary" FontSize="12" Text="出资渠道" />
-                        <ComboBox x:Name="ChannelBox" SelectionChanged="OnChannelChanged"
-                                  HorizontalAlignment="Stretch">
+                        <ComboBox x:Name="ChannelBox" SelectionChanged="OnChannelChanged" HorizontalAlignment="Stretch">
                             <ComboBoxItem Content="灵活公款" Tag="FLEXIBLE" />
                             <ComboBoxItem Content="系里报销" Tag="FACULTY" />
                             <ComboBoxItem Content="班费平摊" Tag="CLASS_FUND" />
@@ -58,14 +57,26 @@
                 <!-- 班费参摊 -->
                 <StackPanel x:Name="SplitSection" Spacing="10" IsVisible="False">
                     <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
-                    <Grid ColumnDefinitions="*,Auto">
-                        <TextBlock Classes="secondary" FontSize="12"
-                                   Text="参摊同学(勾选)——系统自动平摊,尾差由指定同学承担,分项之和恒等于总额" TextWrapping="Wrap" />
-                        <ComboBox Grid.Column="1" x:Name="TailBearerBox" MinWidth="170"
-                                  AutomationProperties.Name="尾差承担人" />
+                    <Grid ColumnDefinitions="*,12,Auto">
+                        <StackPanel Spacing="6">
+                            <CheckBox x:Name="SplitSelectAll" Content="全选" Click="OnSplitSelectAll" FontSize="13" />
+                            <TextBlock Classes="secondary" FontSize="12" TextWrapping="Wrap"
+                                       Text="勾选参摊同学——系统自动平摊，尾差由指定同学承担，分项之和恒等于总额" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2" Spacing="6" MinWidth="170">
+                            <TextBlock Classes="secondary" FontSize="12" Text="尾差承担人" />
+                            <ComboBox x:Name="TailBearerBox" HorizontalAlignment="Stretch" MinWidth="170"
+                                      AutomationProperties.Name="尾差承担人">
+                                <ComboBox.ItemTemplate>
+                                    <DataTemplate x:DataType="local:StudentCheckVm">
+                                        <TextBlock Text="{Binding Label}" />
+                                    </DataTemplate>
+                                </ComboBox.ItemTemplate>
+                            </ComboBox>
+                        </StackPanel>
                     </Grid>
-                    <ScrollViewer MaxHeight="130" Classes="card" Padding="8">
-                        <ItemsControl x:Name="StudentChecks">
+                    <ScrollViewer MaxHeight="170" Classes="card" Padding="8,8,8,12">
+                        <ItemsControl x:Name="StudentChecks" Margin="0,0,0,2">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="local:StudentCheckVm">
                                     <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
@@ -78,13 +89,12 @@
                 </StackPanel>
             </StackPanel>
 
-            <!-- ============ 增资 ============ -->
+            <!-- ============ 入账 ============ -->
             <StackPanel x:Name="IncomePanel" Spacing="12" IsVisible="False">
                 <Grid ColumnDefinitions="*,12,2*">
                     <StackPanel Spacing="6">
                         <TextBlock Classes="secondary" FontSize="12" Text="入账类型" />
-                        <ComboBox x:Name="IncomeKindBox" SelectionChanged="OnIncomeKindChanged"
-                                  HorizontalAlignment="Stretch">
+                        <ComboBox x:Name="IncomeKindBox" SelectionChanged="OnIncomeKindChanged" HorizontalAlignment="Stretch">
                             <ComboBoxItem Content="灵活公款增资" Tag="TO_FLEXIBLE_ACCOUNT" />
                             <ComboBoxItem Content="系报销回款核销" Tag="TO_FACULTY_REIMBURSE" />
                             <ComboBoxItem Content="同学班费充值" Tag="TO_STUDENT_SUB_ACCOUNT" />
@@ -105,24 +115,46 @@
                         <TextBox x:Name="IncomeVoucherBox" Watermark="https://…(转账截图/回执链接)" />
                     </StackPanel>
                 </Grid>
-                <Grid ColumnDefinitions="*,12,2*">
-                    <StackPanel x:Name="IncomeStudentSection" Spacing="6" IsVisible="False">
-                        <TextBlock Classes="secondary" FontSize="12" Text="充值对象" />
-                        <ComboBox x:Name="IncomeStudentBox" HorizontalAlignment="Stretch" />
+
+                <!-- 充值对象(批量勾选) -->
+                <StackPanel x:Name="IncomeStudentsSection" Spacing="8" IsVisible="False">
+                    <Border Height="1" Background="{DynamicResource RectaDividerBrush}" />
+                    <StackPanel Spacing="6">
+                        <CheckBox x:Name="IncomeSelectAll" Content="全选" Click="OnIncomeSelectAll" FontSize="13" />
+                        <TextBlock Classes="secondary" FontSize="12"
+                                   Text="勾选充值对象(可多选)——每人统一充入上方金额，任一失败整体不生效" />
                     </StackPanel>
-                    <StackPanel Grid.Column="2" x:Name="IncomeRequestSection" Spacing="6" IsVisible="False">
-                        <TextBlock Classes="secondary" FontSize="12" Text="关联报销单(必选)" />
-                        <ComboBox x:Name="IncomeRequestBox" HorizontalAlignment="Stretch" />
-                    </StackPanel>
-                </Grid>
+                    <ScrollViewer MaxHeight="170" Classes="card" Padding="8,8,8,12">
+                        <ItemsControl x:Name="IncomeChecks" Margin="0,0,0,2">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate x:DataType="local:StudentCheckVm">
+                                    <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                              Content="{Binding Label}" Margin="6,3" FontSize="13" />
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </StackPanel>
+
+                <!-- 关联报销单(核销) -->
+                <StackPanel x:Name="IncomeRequestSection" Spacing="6" IsVisible="False">
+                    <TextBlock Classes="secondary" FontSize="12" Text="关联报销单(必选)" />
+                    <ComboBox x:Name="IncomeRequestBox" HorizontalAlignment="Stretch">
+                        <ComboBox.ItemTemplate>
+                            <DataTemplate x:DataType="local:RelatedRequestVm">
+                                <TextBlock Text="{Binding Label}" />
+                            </DataTemplate>
+                        </ComboBox.ItemTemplate>
+                    </ComboBox>
+                </StackPanel>
+
                 <TextBlock x:Name="IncomeHint" Classes="secondary" FontSize="12" TextWrapping="Wrap"
-                           Text="灵活公款增资由团支书确认;系报销核销与同学充值由生活委员确认。" />
+                           Text="灵活公款增资由团支书确认；系报销核销与同学充值由生活委员确认。" />
             </StackPanel>
 
             <TextBlock x:Name="ErrorText" Classes="danger-text" TextWrapping="Wrap" IsVisible="False" />
 
-            <Button Classes="accent" Content="确认提交" Click="OnSubmit" HorizontalAlignment="Stretch"
-                    Margin="0,4,0,0" />
+            <Button Classes="accent" Content="确认提交" Click="OnSubmit" HorizontalAlignment="Stretch" Margin="0,4,0,0" />
 
         </StackPanel>
     </ScrollViewer>

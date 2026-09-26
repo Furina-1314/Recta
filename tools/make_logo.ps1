@@ -21,8 +21,8 @@ foreach ($size in $sizes) {
     $scale = $sourceSize / 256.0
     # Centered, square-shouldered R with a long outward leg at the same stroke width.
     $outer = @(
-        @(48,32), @(192,32), @(192,128), @(128,128), @(208,224),
-        @(166,224), @(103,148), @(80,148), @(80,224), @(48,224)
+        @(48,32), @(192,32), @(192,128), @(144,128), @(208,224),
+        @(170,224), @(119,148), @(80,148), @(80,224), @(48,224)
     )
     $inner = @(@(80,64), @(160,64), @(160,96), @(80,96))
     foreach ($shape in @(@{ Points = $outer; Color = $white }, @{ Points = $inner; Color = $blue })) {

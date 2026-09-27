@@ -114,6 +114,12 @@ public partial class LoginWindow : Window
     private async void OnLogin(object? sender, RoutedEventArgs e)
     {
         ErrorText.IsVisible = false;
+        if (!AppServices.NativeReady)
+        {
+            ShowError(AppServices.NativeInitError
+                      ?? "本地服务未就绪，请重启应用。");
+            return;
+        }
         var username = UsernameBox.Text?.Trim();
         var password = PasswordBox.Text ?? string.Empty;
 

@@ -36,9 +36,15 @@
             <Border Classes="card">
                 <StackPanel Spacing="8">
                     <TextBlock Text="关于" FontWeight="SemiBold" />
+                    <TextBlock x:Name="AppVersionText" Classes="secondary" Text="—" />
                     <TextBlock x:Name="VersionText" Classes="secondary" Text="—" />
                     <TextBlock Text="严禁模糊账目 · 金额全程整数分 · 禁用浮点与 WebView"
                                Classes="secondary" />
+                    <StackPanel Orientation="Horizontal" Spacing="10" Margin="0,4,0,0">
+                        <Button x:Name="CheckUpdateButton" Content="检查更新" Click="OnCheckForUpdates" />
+                        <TextBlock x:Name="UpdateResultText" VerticalAlignment="Center"
+                                   Classes="secondary" TextWrapping="Wrap" MaxWidth="520" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
 

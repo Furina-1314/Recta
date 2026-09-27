@@ -109,6 +109,9 @@ DATABASE_URL_UNPOOLED="postgresql://...@ep-xxx.../neondb?sslmode=require"   # �
 ## 发布打包
 
 ```bash
+# 0) 提升 desktop/Recta.App/Recta.App.csproj 的 <Version> 到本次 tag 版本
+#    (应用"检查更新"以该版本与 GitHub Release 比对,漏提会导致升级提示失效)
+
 # 发布构建:关闭开发工具(去掉 recta_dev_truncate_all),重建 DLL
 VCPKG_ROOT=<你的vcpkg> cmake -DRECTA_DEV_TOOLS=OFF native/build/win-x64-release
 VCPKG_ROOT=<你的vcpkg> cmake --build native/build/win-x64-release --config Release --target recta_capi

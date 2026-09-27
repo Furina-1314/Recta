@@ -1,0 +1,18 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Recta.App.Windows.MessageDialog"
+        Title="提示"
+        Width="400" Height="190" CanResize="False"
+        WindowStartupLocation="CenterOwner"
+        Background="{DynamicResource RectaCanvasBrush}" FontSize="14">
+
+    <StackPanel Margin="24,20" Spacing="12">
+        <TextBlock x:Name="MessageText" TextWrapping="Wrap" MinHeight="48" />
+        <Grid ColumnDefinitions="*,12,Auto,12,Auto">
+            <Button Grid.Column="2" x:Name="CancelButton" MinWidth="96"
+                    Content="取消" Click="OnCancel" />
+            <Button Grid.Column="4" x:Name="OkButton" MinWidth="96"
+                    Classes="accent" Content="确定" Click="OnOk" />
+        </Grid>
+    </StackPanel>
+</Window>

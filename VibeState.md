@@ -5,8 +5,8 @@
 - **最后更新**：2026-09-25
 - **当前阶段**：**P13 完成——全部 14 个 Phase 收官，v0.1.0 可交付**
 - **仓库**：https://github.com/Furina-1314/Recta
-- **最新 Release**：v1.0.0（2026-09-26 首个正式版；官网同步更新，操作手册见 docs/操作手册.md）
-- **发布轨道**：每次功能里程碑 → 打 tag → `cmake -DRECTA_DEV_TOOLS=OFF` 重编 DLL → publish 载荷冒烟 → Inno 打包(/DAppVersion=x.y.z) → 静默装/跑/卸闭环 → `gh release create`
+- **最新 Release**：v1.0.0（2026-09-26 首个正式版；官网同步更新，操作手册见 docs/操作手册.md）；**v1.0.1 待发布**（改密修复 + 启动自愈 + 检查更新，代码就绪未打 tag）
+- **发布轨道**：每次功能里程碑 → 提升 `desktop/Recta.App/Recta.App.csproj` 的 `<Version>`（检查更新以此与 GitHub Release 比对）→ 打 tag → `cmake -DRECTA_DEV_TOOLS=OFF` 重编 DLL → publish 载荷冒烟 → Inno 打包(/DAppVersion=x.y.z) → 静默装/跑/卸闭环 → `gh release create`
 
 ---
 
@@ -108,6 +108,8 @@ Recta/
 ```
 
 ## 4. 变更日志
+
+- **2026-09-27 · 改密静默失败根修 + 启动自愈 + 检查更新（v1.0.1 待发布）** ① **设置页修改口令无声失败根修**：crash.log 实锤根因——`SettingsPage.OnChangePassword` 把 `OldPasswordBox.Text/NewPasswordBox.Text` 的读取写进了 `ConnectionGate.RunAsync` 的 `Task.Run` 工作线程 lambda，Avalonia 对跨线程 `TextBox.get_Text()` 抛 `InvalidOperationException`，而 `catch` 只接 `RectaException`，异常被 Dispatcher 兜底吞掉——表现为"点确认修改毫无反应"。修复：控件值在 UI 线程先读入局部变量再进 lambda（与其余页面既有模式一致），并补 `catch (Exception)` 兜底。② **成功/失败弹窗**：新增 `MessageDialog`（消息+确定，可带取消作确认框、错误消息危险色）；改密成功弹"口令修改成功"，失败弹领域友好原因（原口令不符/弱口令/网络等），行内文案保留。③ **启动自愈（个例排查：5060+Intel 无窗口无进程）**：`Program.Main` 捕获 Avalonia 启动期异常 → 记 crash.log 后**自动以纯软件渲染重启一次**（`Win32RenderingMode.Software`，或 `RECTA_RENDER=software` 手动指定）；再失败弹 **Win32 原生 MessageBox** 给出异常与日志路径——"双击转圈、无窗口、无进程"从此必有可见报错可诊断。`AppDomain.UnhandledException` 全量落盘（原先仅 Dispatcher 异常）；`InitNative` 捕获一切异常（缺 VC++ 运行库等）并在登录窗呈现原因而非静默。④ **检查更新（设置→关于）**：`UpdateService` 查 `api.github.com/repos/Furina-1314/Recta/releases/latest` 比对版本（`<Version>1.0.1</Version>` 写入程序集，SDK 追加的 `+源修订哈希` 解析时剥去）；匿名 API 403/限流时自动回退 `releases/latest` 重定向解析（免配额，按 `Recta-v{ver}-win-x64-Setup.exe` 约定构造资产地址，与 Recta.iss OutputBaseFilename 一致）。确认后流式下载安装包到**安装目录**（进度条可取消）→ 启动 `/SILENT /FORCECLOSEAPPLICATIONS` 安装器 → 应用自退，Inno 沿用登记目录原地升级。开发构建（无 unins000.dat）提示不支持自动更新。真实验证：GitHub API/回退双通道取版、真实资产下载（8s 4.2MB 进度推进）、`ParseVersion` 边界矩阵全对；17 项 C# 回归全绿；开发构建与 F:\Recta 安装版就地更新后冒烟截图通过。
 
 - **2026-09-24 · P0** 清理 Neon 脚手架残留（hello.ts / neon.ts / package*.json / node_modules）；建立目录结构与 .gitignore；初始化 git 并推送 GitHub。
 - **2026-09-24 · P1** `Recta.Domain` 落地：`Money`（溢出检查、禁乘除、定点 parse/format）、`DistributeExpense` 尾差平摊（空名单/重复学号/承担人缺席防御）、`ComputeAdvanceDelta` 三段垫资判定、`VerifyConservation` 守恒校验、`AssertCanReview/AssertCanSettle` 两阶段 RBAC 硬约束、全量枚举字符串映射（与 DDL 取值一致）；gtest **25 用例全绿**（MSVC x64 Release，ctest 通过）。注：MSVC 对 requires 探测已删除函数报硬错误，金额禁乘除由 delete 直接保证，不写成 static_assert。

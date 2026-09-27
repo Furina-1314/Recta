@@ -11,6 +11,8 @@
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
     <ApplicationIcon>Assets\Recta.ico</ApplicationIcon>
+    <!-- 应用版本:发布时随 tag 提升(UpdateService 以此与 GitHub Release 比对)。 -->
+    <Version>1.0.1</Version>
   </PropertyGroup>
 
   <ItemGroup>

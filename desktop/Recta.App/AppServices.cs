@@ -12,6 +12,9 @@ public static class AppServices
 
     public static bool NativeReady { get; private set; }
 
+    /// <summary>原生初始化失败的原因(缺 VC++ 运行库/DLL 损坏等),登录窗据此给出可见错误。</summary>
+    public static string? NativeInitError { get; private set; }
+
     public static bool SmokeMode =>
         Environment.GetEnvironmentVariable("RECTA_SMOKE") == "1";
 
@@ -41,9 +44,18 @@ public static class AppServices
             }
             NativeReady = true;
         }
-        catch (RectaException)
+        catch (RectaException ex)
         {
             NativeReady = false; // 登录窗会给出明确错误
+            NativeInitError = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            // recta_capi.dll 装载失败(缺 VC++ 运行库/文件损坏)等非领域异常:
+            // 不能让启动静默崩溃——记日志,登录窗呈现原因。
+            NativeReady = false;
+            NativeInitError = $"原生核心加载失败:{ex.Message}";
+            CrashLog.Append(ex);
         }
     }
 

@@ -33,7 +33,7 @@ public partial class App : Application
         // 兜底:未处理异常记录到日志并保持运行(账务操作中,闪退比降级更危险)。
         Avalonia.Threading.Dispatcher.UIThread.UnhandledException += (_, e) =>
         {
-            AppendCrashLog(e.Exception);
+            CrashLog.Append(e.Exception);
             e.Handled = true;
         };
 
@@ -72,23 +72,5 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
-    }
-
-    private static void AppendCrashLog(Exception ex)
-    {
-        try
-        {
-            var dir = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Recta", "logs");
-            Directory.CreateDirectory(dir);
-            File.AppendAllText(
-                Path.Combine(dir, "crash.log"),
-                $"{DateTime.Now:yyyy-MM-dd HH:mm:ss}  {ex.GetType().Name}: {ex.Message}\n{ex.StackTrace}\n\n");
-        }
-        catch
-        {
-            // 日志失败不影响主流程
-        }
     }
 }

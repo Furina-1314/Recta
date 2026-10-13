@@ -45,7 +45,8 @@ public partial class RequestsPage : UserControl, IRefreshable
         }
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
+    private async void OnRefresh(object? sender, RoutedEventArgs e) =>
+        await UiBusy.RunAsync(this, LoadAsync);
 
     // ---------- 数据装载 ----------
 
@@ -252,17 +253,20 @@ public partial class RequestsPage : UserControl, IRefreshable
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() => AppServices.Client.ApproveRequest(
-                AppServices.Session!.UserId, _current.Request.Id, approvedCents,
-                notes.Length == 0 ? null : notes));
-            await LoadAndReselectAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowInspectorError(ConnectionGate.Friendly(ex));
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() => AppServices.Client.ApproveRequest(
+                    AppServices.Session!.UserId, _current.Request.Id, approvedCents,
+                    notes.Length == 0 ? null : notes));
+                await LoadAndReselectAsync();
+            }
+            catch (RectaException ex)
+            {
+                ShowInspectorError(ConnectionGate.Friendly(ex));
+            }
+        });
     }
 
     private async void OnReject(object? sender, RoutedEventArgs e)
@@ -286,16 +290,19 @@ public partial class RequestsPage : UserControl, IRefreshable
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() => AppServices.Client.RejectRequest(
-                AppServices.Session!.UserId, _current.Request.Id, category, notes));
-            await LoadAndReselectAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowInspectorError(ConnectionGate.Friendly(ex));
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() => AppServices.Client.RejectRequest(
+                    AppServices.Session!.UserId, _current.Request.Id, category, notes));
+                await LoadAndReselectAsync();
+            }
+            catch (RectaException ex)
+            {
+                ShowInspectorError(ConnectionGate.Friendly(ex));
+            }
+        });
     }
 
     private async void OnSettle(object? sender, RoutedEventArgs e)
@@ -308,30 +315,33 @@ public partial class RequestsPage : UserControl, IRefreshable
 
         var extra = (SettleNotesBox.Text ?? "").Trim();
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            var outcome = await ConnectionGate.RunAsync(() => AppServices.Client.SettleRequest(
-                AppServices.Session!.UserId, _current.Request.Id, extra.Length == 0 ? null : extra));
+            try
+            {
+                var outcome = await ConnectionGate.RunAsync(() => AppServices.Client.SettleRequest(
+                    AppServices.Session!.UserId, _current.Request.Id, extra.Length == 0 ? null : extra));
 
-            ResultPanel.IsVisible = true;
-            if (outcome.Advances.Count == 0)
-            {
-                ResultText.Text = $"办结出账 {RectaClient.FormatMoney(outcome.SettledCents)} 元,无生委垫资。";
+                ResultPanel.IsVisible = true;
+                if (outcome.Advances.Count == 0)
+                {
+                    ResultText.Text = $"办结出账 {RectaClient.FormatMoney(outcome.SettledCents)} 元,无生委垫资。";
+                }
+                else
+                {
+                    var lines = string.Join(";", outcome.Advances
+                        .Select(a => $"{a.Name} {RectaClient.FormatMoney(a.AmountCents)} 元"));
+                    ResultText.Text =
+                        $"办结出账 {RectaClient.FormatMoney(outcome.SettledCents)} 元;生委垫资共 " +
+                        $"{RectaClient.FormatMoney(outcome.TotalAdvanceCents)} 元:{lines}。";
+                }
+                await LoadAndReselectAsync();
             }
-            else
+            catch (RectaException ex)
             {
-                var lines = string.Join(";", outcome.Advances
-                    .Select(a => $"{a.Name} {RectaClient.FormatMoney(a.AmountCents)} 元"));
-                ResultText.Text =
-                    $"办结出账 {RectaClient.FormatMoney(outcome.SettledCents)} 元;生委垫资共 " +
-                    $"{RectaClient.FormatMoney(outcome.TotalAdvanceCents)} 元:{lines}。";
+                ShowInspectorError(ex.IsState ? ConnectionGate.Friendly(ex) : $"办结失败:{ConnectionGate.Friendly(ex)}");
             }
-            await LoadAndReselectAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowInspectorError(ex.IsState ? ConnectionGate.Friendly(ex) : $"办结失败:{ConnectionGate.Friendly(ex)}");
-        }
+        });
     }
 
     // 操作后重载并保持选中。

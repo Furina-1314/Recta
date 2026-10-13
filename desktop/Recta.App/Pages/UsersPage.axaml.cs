@@ -104,23 +104,26 @@ public partial class UsersPage : UserControl, IRefreshable
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            var temp = await ConnectionGate.RunAsync(() =>
-                AppServices.Client.CreateUser(session.UserId, $"u_{username}", username, name, role));
-            NewUsernameBox.Text = "";
-            NewNameBox.Text = "";
-            ShowTempPassword(temp);
-            await LoadAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
-        catch (Exception ex)
-        {
-            ShowError($"操作异常:{ex.Message}");
-        }
+            try
+            {
+                var temp = await ConnectionGate.RunAsync(() =>
+                    AppServices.Client.CreateUser(session.UserId, $"u_{username}", username, name, role));
+                NewUsernameBox.Text = "";
+                NewNameBox.Text = "";
+                ShowTempPassword(temp);
+                await LoadAsync();
+            }
+            catch (RectaException ex)
+            {
+                ShowError(ConnectionGate.Friendly(ex));
+            }
+            catch (Exception ex)
+            {
+                ShowError($"操作异常:{ex.Message}");
+            }
+        });
     }
 
     private async void OnCopyPassword(object? sender, RoutedEventArgs e)
@@ -138,20 +141,23 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             return;
         }
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            var temp = await ConnectionGate.RunAsync(() =>
-                AppServices.Client.ResetPassword(AppServices.Session!.UserId, row.Id));
-            ShowTempPassword(temp);
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
-        catch (Exception ex)
-        {
-            ShowError($"操作异常:{ex.Message}");
-        }
+            try
+            {
+                var temp = await ConnectionGate.RunAsync(() =>
+                    AppServices.Client.ResetPassword(AppServices.Session!.UserId, row.Id));
+                ShowTempPassword(temp);
+            }
+            catch (RectaException ex)
+            {
+                ShowError(ConnectionGate.Friendly(ex));
+            }
+            catch (Exception ex)
+            {
+                ShowError($"操作异常:{ex.Message}");
+            }
+        });
     }
 
     private async void OnRename(object? sender, RoutedEventArgs e)
@@ -168,20 +174,23 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             return;
         }
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() =>
-                AppServices.Client.UpdateDisplayName(AppServices.Session!.UserId, row.Id, name));
-            await LoadAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
-        catch (Exception ex)
-        {
-            ShowError($"操作异常:{ex.Message}");
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() =>
+                    AppServices.Client.UpdateDisplayName(AppServices.Session!.UserId, row.Id, name));
+                await LoadAsync();
+            }
+            catch (RectaException ex)
+            {
+                ShowError(ConnectionGate.Friendly(ex));
+            }
+            catch (Exception ex)
+            {
+                ShowError($"操作异常:{ex.Message}");
+            }
+        });
     }
 
     private async void OnToggleActive(object? sender, RoutedEventArgs e)
@@ -190,29 +199,33 @@ public partial class UsersPage : UserControl, IRefreshable
         {
             return;
         }
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            if (row.IsDeactivate)
+            try
             {
-                await ConnectionGate.RunAsync(() =>
-                    AppServices.Client.DeactivateUser(AppServices.Session!.UserId, row.Id));
+                if (row.IsDeactivate)
+                {
+                    await ConnectionGate.RunAsync(() =>
+                        AppServices.Client.DeactivateUser(AppServices.Session!.UserId, row.Id));
+                }
+                else
+                {
+                    await ConnectionGate.RunAsync(() =>
+                        AppServices.Client.ActivateUser(AppServices.Session!.UserId, row.Id));
+                }
+                await LoadAsync();
             }
-            else
+            catch (RectaException ex)
             {
-                await ConnectionGate.RunAsync(() =>
-                    AppServices.Client.ActivateUser(AppServices.Session!.UserId, row.Id));
+                ShowError(ConnectionGate.Friendly(ex));
             }
-            await LoadAsync();
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
-        catch (Exception ex)
-        {
-            ShowError($"操作异常:{ex.Message}");
-        }
+            catch (Exception ex)
+            {
+                ShowError($"操作异常:{ex.Message}");
+            }
+        });
     }
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
+    private async void OnRefresh(object? sender, RoutedEventArgs e) =>
+        await UiBusy.RunAsync(this, LoadAsync);
 }

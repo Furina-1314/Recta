@@ -165,7 +165,8 @@ public partial class LedgerPage : UserControl, IRefreshable
 
     private void OnSearchChanged(object? sender, TextChangedEventArgs e) => ApplyFilter();
 
-    private void OnRefresh(object? sender, RoutedEventArgs e) => _ = LoadAsync();
+    private async void OnRefresh(object? sender, RoutedEventArgs e) =>
+        await UiBusy.RunAsync(this, LoadAsync);
 
     private async void OnExport(object? sender, RoutedEventArgs e)
     {

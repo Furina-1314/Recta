@@ -62,18 +62,21 @@ public partial class LoginWindow : Window
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            var tempPassword = await Task.Run(() =>
-                AppServices.Client.BootstrapSecretary(username, name));
-            TempPasswordBox.Text = tempPassword;
-            TempPasswordBox.IsVisible = true;
-            BootstrapDoneButton.IsVisible = true;
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
+            try
+            {
+                var tempPassword = await Task.Run(() =>
+                    AppServices.Client.BootstrapSecretary(username, name));
+                TempPasswordBox.Text = tempPassword;
+                TempPasswordBox.IsVisible = true;
+                BootstrapDoneButton.IsVisible = true;
+            }
+            catch (RectaException ex)
+            {
+                ShowError(ConnectionGate.Friendly(ex));
+            }
+        });
     }
 
     private void OnBootstrapDone(object? sender, RoutedEventArgs e)
@@ -129,33 +132,31 @@ public partial class LoginWindow : Window
             return;
         }
 
-        LoginButton.IsEnabled = false;
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            var session = await ConnectionGate.RunAsync(() => AppServices.Client.Login(username, password));
-            AppServices.SetSession(session);
+            try
+            {
+                var session = await ConnectionGate.RunAsync(() => AppServices.Client.Login(username, password));
+                AppServices.SetSession(session);
 
-            if (session.MustChangePassword)
-            {
-                _pendingSession = session;
-                LoginPanel.IsVisible = false;
-                ChangePanel.IsVisible = true;
+                if (session.MustChangePassword)
+                {
+                    _pendingSession = session;
+                    LoginPanel.IsVisible = false;
+                    ChangePanel.IsVisible = true;
+                }
+                else
+                {
+                    EnterMain();
+                }
             }
-            else
+            catch (RectaException ex)
             {
-                EnterMain();
+                ShowError(ex.IsDatabase
+                    ? $"数据库连接失败：{ConnectionGate.Friendly(ex)}\n请检查网络与 .env.local 配置。"
+                    : ConnectionGate.Friendly(ex));
             }
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ex.IsDatabase
-                ? $"数据库连接失败：{ConnectionGate.Friendly(ex)}\n请检查网络与 .env.local 配置。"
-                : ConnectionGate.Friendly(ex));
-        }
-        finally
-        {
-            LoginButton.IsEnabled = true;
-        }
+        });
     }
 
     private async void OnChangePassword(object? sender, RoutedEventArgs e)
@@ -176,17 +177,20 @@ public partial class LoginWindow : Window
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() => AppServices.Client.ChangePassword(_pendingSession.UserId, oldPassword,
-                                                                   newPassword));
-            AppServices.SetSession(_pendingSession with { MustChangePassword = false });
-            EnterMain();
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() => AppServices.Client.ChangePassword(_pendingSession.UserId,
+                    oldPassword, newPassword));
+                AppServices.SetSession(_pendingSession with { MustChangePassword = false });
+                EnterMain();
+            }
+            catch (RectaException ex)
+            {
+                ShowError(ConnectionGate.Friendly(ex));
+            }
+        });
     }
 
     private void EnterMain()

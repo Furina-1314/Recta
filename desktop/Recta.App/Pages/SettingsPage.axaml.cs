@@ -68,8 +68,8 @@ public partial class SettingsPage : UserControl
 
         try
         {
-            await ConnectionGate.RunAsync(() =>
-                AppServices.Client.ChangePassword(session.UserId, oldPassword, newPassword));
+            await UiBusy.RunAsync(this, () => ConnectionGate.RunAsync(() =>
+                AppServices.Client.ChangePassword(session.UserId, oldPassword, newPassword)));
             OldPasswordBox.Text = "";
             NewPasswordBox.Text = "";
             SetPasswordResult(true, "口令已修改。");
@@ -121,10 +121,9 @@ public partial class SettingsPage : UserControl
             return;
         }
 
-        CheckUpdateButton.IsEnabled = false;
         UpdateResultText.Text = "正在检查更新…";
         UpdateResultText.Foreground = null;
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
             UpdateService.ReleaseInfo? release;
             try
@@ -171,11 +170,7 @@ public partial class SettingsPage : UserControl
             }
 
             await DownloadAndInstallAsync(release);
-        }
-        finally
-        {
-            CheckUpdateButton.IsEnabled = true;
-        }
+        });
     }
 
     private async Task DownloadAndInstallAsync(UpdateService.ReleaseInfo release)

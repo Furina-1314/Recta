@@ -16,7 +16,8 @@ public partial class AuditPage : UserControl, IRefreshable
         Loaded += (_, _) => _ = LoadAsync();
     }
 
-    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+    private async void OnRefresh(object? sender, RoutedEventArgs e) =>
+        await UiBusy.RunAsync(this, LoadAsync);
 
     public Task RefreshAsync() => LoadAsync();
 

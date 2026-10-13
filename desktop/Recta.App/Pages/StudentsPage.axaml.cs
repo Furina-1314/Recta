@@ -29,7 +29,8 @@ public partial class StudentsPage : UserControl, IRefreshable
         Loaded += (_, _) => _ = LoadAsync();
     }
 
-    private async void OnRefresh(object? sender, RoutedEventArgs e) => await LoadAsync();
+    private async void OnRefresh(object? sender, RoutedEventArgs e) =>
+        await UiBusy.RunAsync(this, LoadAsync);
 
     public Task RefreshAsync() => LoadAsync();
 
@@ -192,17 +193,20 @@ public partial class StudentsPage : UserControl, IRefreshable
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() => AppServices.Client.AddStudent(session.UserId, id, name));
-            NewStudentIdBox.Text = "";
-            NewStudentNameBox.Text = "";
-            await LoadAsync();
-        }
-        catch (RectaException ex)
-        {
-            RosterError.Text = ConnectionGate.Friendly(ex);
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() => AppServices.Client.AddStudent(session.UserId, id, name));
+                NewStudentIdBox.Text = "";
+                NewStudentNameBox.Text = "";
+                await LoadAsync();
+            }
+            catch (RectaException ex)
+            {
+                RosterError.Text = ConnectionGate.Friendly(ex);
+            }
+        });
     }
 
     private async void OnRenameStudent(object? sender, RoutedEventArgs e)
@@ -220,15 +224,18 @@ public partial class StudentsPage : UserControl, IRefreshable
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            await ConnectionGate.RunAsync(() => AppServices.Client.RenameStudent(session.UserId, row.StudentId, name));
-            RenameBox.Text = "";
-            await LoadAsync();
-        }
-        catch (RectaException ex)
-        {
-            RosterError.Text = ConnectionGate.Friendly(ex);
-        }
+            try
+            {
+                await ConnectionGate.RunAsync(() => AppServices.Client.RenameStudent(session.UserId, row.StudentId, name));
+                RenameBox.Text = "";
+                await LoadAsync();
+            }
+            catch (RectaException ex)
+            {
+                RosterError.Text = ConnectionGate.Friendly(ex);
+            }
+        });
     }
 }

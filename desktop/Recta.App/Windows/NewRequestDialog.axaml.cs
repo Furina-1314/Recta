@@ -251,23 +251,26 @@ public partial class NewRequestDialog : Window
             return;
         }
 
-        try
+        await UiBusy.RunAsync(this, async () =>
         {
-            if (_incomeMode)
+            try
             {
-                await SubmitIncomeAsync(session);
+                if (_incomeMode)
+                {
+                    await SubmitIncomeAsync(session);
+                }
+                else
+                {
+                    await SubmitExpenseAsync(session);
+                }
+                Submitted = true;
+                Close();
             }
-            else
+            catch (RectaException ex)
             {
-                await SubmitExpenseAsync(session);
+                ShowError(ConnectionGate.Friendly(ex));
             }
-            Submitted = true;
-            Close();
-        }
-        catch (RectaException ex)
-        {
-            ShowError(ConnectionGate.Friendly(ex));
-        }
+        });
     }
 
     private async Task SubmitExpenseAsync(LoginSession session)
